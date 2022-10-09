@@ -1,6 +1,8 @@
 package org.shedlang.compiler.tests.types
 
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.present
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
@@ -9,7 +11,7 @@ import org.shedlang.compiler.types.*
 
 class TypeApplicationTests {
     @Test
-    fun applyingTypeToShapeReplaceTypeParametersInTypeArguments() {
+    fun applyingTypeToShapeCreatesConstructedType() {
         val typeParameter1 = invariantTypeParameter("T")
         val typeParameter2 = invariantTypeParameter("U")
         val shape = parametrizedShapeType(
@@ -19,9 +21,9 @@ class TypeApplicationTests {
         )
         assertThat(
             applyTypeLevel(shape, listOf(BoolType, IntType)),
-            isShapeType(
-                name = isIdentifier("Pair"),
-                typeLevelArguments = isSequence(isBoolType, isIntType)
+            isConstructedType(
+                constructor = equalTo(shape),
+                args = isSequence(isBoolType, isIntType)
             )
         )
     }
@@ -40,10 +42,10 @@ class TypeApplicationTests {
         )
         assertThat(
             applyTypeLevel(shape, listOf(BoolType, IntType)),
-            isShapeType(fields = isSequence(
+            isConstructedType(fields = present(isSequence(
                 isField(name = isIdentifier("first"), type = isBoolType),
                 isField(name = isIdentifier("second"), type = isIntType)
-            ))
+            )))
         )
     }
 
@@ -65,9 +67,9 @@ class TypeApplicationTests {
 
         assertThat(
             applyTypeLevel(shapeType, listOf(BoolType)),
-            isShapeType(fields = isSequence(
+            isConstructedType(fields = present(isSequence(
                 isField(name = isIdentifier("value"), type = isEquivalentType(applyTypeLevel(innerShapeType, listOf(BoolType)) as Type))
-            ))
+            )))
         )
     }
 
@@ -82,9 +84,9 @@ class TypeApplicationTests {
         )
         assertThat(
             applyTypeLevel(union, listOf(BoolType, IntType)),
-            isUnionType(
-                name = isIdentifier("Either"),
-                typeLevelArguments = isSequence(isBoolType, isIntType)
+            isConstructedType(
+                constructor = equalTo(union),
+                args = isSequence(isBoolType, isIntType)
             )
         )
     }
@@ -102,14 +104,16 @@ class TypeApplicationTests {
         val union = parametrizedUnionType(
             "Union",
             parameters = listOf(unionTypeParameter),
-            members = listOf(applyTypeLevel(shapeType, listOf(unionTypeParameter)) as ShapeType)
+            members = listOf(applyTypeLevel(shapeType, listOf(unionTypeParameter)))
         )
 
+        val result = applyTypeLevel(union, listOf(BoolType)) as ConstructedType
+
         assertThat(
-            applyTypeLevel(union, listOf(BoolType)),
-            isUnionType(members = isSequence(
+            result.unionMembers(),
+            isSequence(
                 isEquivalentType(applyTypeLevel(shapeType, listOf(BoolType)) as Type)
-            ))
+            )
         )
     }
 

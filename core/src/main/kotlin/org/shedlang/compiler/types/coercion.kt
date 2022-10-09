@@ -149,13 +149,29 @@ class TypeConstraintSolver(
 
         // TODO: deal with type parameters
         if (from is UnionType) {
-            return from.members.all({ member -> coerce(from = member, to = to) })
+            return from.members.all({ member ->
+                coerce(from = member, to = to)
+            })
+        }
+
+        // TODO: test constructed union types
+        // TODO: remove duplication of handling unions and constructed unions
+        if (from is ConstructedType && from.constructor.genericType is UnionType) {
+            return from.unionMembers().all { member ->
+                coerce(from = member, to = to)
+            }
         }
 
         if (to is UnionType) {
             // TODO: coerce mutates state, but we probably want to ignore changes
             // from failed attempts to coerce to a member
             return to.members.any({ member -> coerce(from = from, to = member) })
+        }
+
+        if (to is ConstructedType && to.constructor.genericType is UnionType) {
+            return to.unionMembers().any { member ->
+                coerce(from = from, to = member)
+            }
         }
 
         if (from is FunctionType && to is FunctionType) {
@@ -190,15 +206,27 @@ class TypeConstraintSolver(
         }
 
         if (from is ShapeType && to is ShapeType) {
-            val sameShapeId = from.shapeId == to.shapeId
+            return from.shapeId == to.shapeId
+        }
 
-            val canCoerceTypeLevelArguments = zip3(
-                from.typeLevelParameters,
-                from.typeLevelArguments,
-                to.typeLevelArguments
+        if (
+            from is ConstructedType &&
+            from.constructor.genericType is ShapeType &&
+            to is ConstructedType &&
+            to.constructor.genericType is ShapeType
+        ) {
+            if (from.shapeId != to.shapeId) {
+                return false
+            }
+
+            return zip3(
+                from.constructor.parameters,
+                from.args,
+                to.args
             ) { parameter, fromArg, toArg ->
                 parameter.accept(object : TypeLevelParameter.Visitor<Boolean> {
                     override fun visit(parameter: TypeParameter): Boolean {
+                        // TODO: tidy this up
                         return fromArg is Type && toArg is Type && when (parameter.variance) {
                             Variance.INVARIANT -> isEquivalentType(fromArg, toArg)
                             Variance.COVARIANT -> coerce(from = fromArg, to = toArg)
@@ -211,8 +239,6 @@ class TypeConstraintSolver(
                     }
                 })
             }.all()
-
-            return sameShapeId && canCoerceTypeLevelArguments
         }
 
         if (from is TypeLevelValueType && from.value is Type && to is TypeLevelValueType && to.value is Type) {

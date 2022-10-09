@@ -90,6 +90,7 @@ internal object WasmObjects {
 
     fun layout(type: Type): Layout {
         return when (type) {
+            is ConstructedType -> layout(type.constructor.genericType)
             is ModuleType -> moduleLayout(type)
             is ShapeType -> shapeLayout(type)
             is TypeLevelValueType -> {

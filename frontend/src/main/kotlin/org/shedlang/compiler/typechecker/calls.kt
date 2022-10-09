@@ -79,15 +79,21 @@ private sealed class CallReceiverAnalysis {
     class Function(val receiverType: FunctionType): CallReceiverAnalysis()
     class Constructor(
         val typeFunction: TypeConstructor?,
-        val shapeType: ShapeType,
+        val shapeType: Type,
     ): CallReceiverAnalysis() {
         fun receiverType(): FunctionType {
+            val returnType = if (typeFunction == null) {
+                shapeType
+            } else {
+                applyTypeLevel(typeFunction, typeFunction.parameters)
+            }
+
             return functionType(
                 typeLevelParameters = typeFunction?.parameters ?: listOf(),
                 positionalParameters = listOf(),
-                namedParameters = shapeType.fields
+                namedParameters = shapeType.fields!!
                     .mapValues { field -> field.value.type },
-                returns = shapeType
+                returns = returnType
             )
         }
     }
@@ -105,7 +111,10 @@ private fun analyseCallReceiver(receiverType: Type): CallReceiverAnalysis {
         } else if (receiverInnerType is TypeConstructor) {
             val typeFunctionInnerType = receiverInnerType.genericType
             if (typeFunctionInnerType is ShapeType) {
-                return CallReceiverAnalysis.Constructor(typeFunction = receiverInnerType, shapeType = typeFunctionInnerType)
+                return CallReceiverAnalysis.Constructor(
+                    typeFunction = receiverInnerType,
+                    shapeType = applyTypeLevel(receiverInnerType, receiverInnerType.parameters)
+                )
             }
         }
     } else if (receiverType is VarargsType) {
@@ -118,7 +127,8 @@ private fun analyseCallReceiver(receiverType: Type): CallReceiverAnalysis {
 private fun inferNormalCallType(
     node: CallNode,
     receiverType: FunctionType,
-    splatType: ShapeType?,
+    // TODO: make shape type
+    splatType: Type?,
     context: TypeContext,
 ): Pair<Type, TypeLevelBindings> {
     val bindings = checkArguments(
@@ -220,7 +230,8 @@ private fun checkArguments(
     namedParameters: Map<Identifier, Type>,
     context: TypeContext,
     bindingsHint: TypeLevelBindings? = null,
-    splatType: ShapeType? = null,
+    // TODO: make shape type
+    splatType: Type? = null,
     allowMissing: Boolean
 ): TypeLevelBindings {
     val positionalArgumentsWithTypes = call.positionalArguments.zip(positionalParameters)
@@ -262,10 +273,10 @@ private fun checkArguments(
                 } else {
                     // TODO: handle non-shape types
                     // TODO: handle generic types
-                    val type = inferType(argument.expression, context = context) as ShapeType
-                    namedArgumentNames += type.fields.keys
+                    val type = inferType(argument.expression, context = context)
+                    namedArgumentNames += type.fields!!.keys
                     namedArgumentsWithTypes.add(Pair(argument.expression, splatType))
-                    type.fields.mapValues { (_, field) -> field.type }
+                    type.fields!!.mapValues { (_, field) -> field.type }
                 }
             }
         }

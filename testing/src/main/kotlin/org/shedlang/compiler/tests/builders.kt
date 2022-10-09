@@ -611,7 +611,7 @@ fun typeAlias(
 
 fun parametrizedShapeType(
     name: String,
-    parameters: List<TypeParameter>,
+    parameters: List<TypeLevelParameter>,
     tagValue: TagValue? = null,
     fields: List<Field> = listOf()
 ) = TypeConstructor(
@@ -619,8 +619,6 @@ fun parametrizedShapeType(
         name = name,
         tagValue = tagValue,
         fields = fields,
-        typeParameters = parameters,
-        typeArguments = parameters
     ),
     parameters = parameters
 )
@@ -629,16 +627,12 @@ fun shapeType(
     name: String = "Shape",
     fields: List<Field> = listOf(),
     tagValue: TagValue? = null,
-    typeParameters: List<TypeParameter> = listOf(),
-    typeArguments: List<Type> = listOf(),
     shapeId: Int = freshTypeId()
 ) = lazyShapeType(
     shapeId = shapeId,
     qualifiedName = QualifiedName.builtin(name),
     tagValue = tagValue,
     getFields = lazy { fields },
-    typeLevelParameters = typeParameters,
-    typeLevelArguments = typeArguments
 )
 
 fun field(name: String, type: Type, shapeId: Int = freshTypeId()) = Field(
@@ -650,14 +644,13 @@ fun field(name: String, type: Type, shapeId: Int = freshTypeId()) = Field(
 fun parametrizedUnionType(
     name: String,
     tag: Tag = tag(name = name),
-    parameters: List<TypeParameter> = listOf(invariantTypeParameter("T")),
-    members: List<ShapeType> = listOf()
+    parameters: List<TypeLevelParameter> = listOf(invariantTypeParameter("T")),
+    members: List<Type> = listOf()
 ) = TypeConstructor(
     genericType = LazyUnionType(
         name = Identifier(name),
         tag = tag,
         getMembers = lazy { members },
-        typeLevelArguments = parameters
     ),
     parameters = parameters
 )
@@ -674,7 +667,6 @@ fun unionType(
     name = Identifier(name),
     tag = tag,
     getMembers = lazy { members },
-    typeLevelArguments = listOf()
 )
 
 fun varargsType() = VarargsType(

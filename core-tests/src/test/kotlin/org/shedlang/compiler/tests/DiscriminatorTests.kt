@@ -83,13 +83,13 @@ class DiscriminatorTests {
             )
         )
         val member2 = shapeType(name = "Member2", tagValue = tagValue(tag, "Member2"))
-        val union = unionType("Union", tag = tag, members = listOf(applyTypeLevel(member1, listOf(IntType)) as Type, member2))
+        val union = unionType("Union", tag = tag, members = listOf(applyTypeLevel(member1, listOf(IntType)), member2))
 
         val discriminator = findDiscriminator(sourceType = union, targetType = applyTypeLevel(member1, listOf(IntType)))
 
         assertThat(discriminator, present(isDiscriminator(
             tagValue = equalTo(tagValue(tag, "Member1")),
-            targetType = isEquivalentType(applyTypeLevel(member1, listOf(IntType)) as Type)
+            targetType = isEquivalentType(applyTypeLevel(member1, listOf(IntType)))
         )))
     }
 

@@ -156,7 +156,7 @@ private fun inferIsExpressionType(node: IsNode, context: TypeContext): BoolType 
 }
 
 private fun evalTypeCondition(
-    expressionType: UnionType,
+    expressionType: Type,
     targetType: TypeLevelValue,
     source: Source
 ): Discriminator {
@@ -205,7 +205,7 @@ private fun inferIfExpressionType(node: IfNode, context: TypeContext): Type {
             if (conditionExpression is ReferenceNode) {
                 val conditionType = evalTypeLevelValue(condition.type, context)
                 val discriminator = evalTypeCondition(
-                    expressionType = context.typeOf(context.resolveReference(conditionExpression)) as UnionType,
+                    expressionType = context.typeOf(context.resolveReference(conditionExpression)),
                     targetType = conditionType,
                     source = branch.source
                 )
@@ -254,7 +254,7 @@ private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type 
         union(acc, branchType, source = branchSource)
     }
 
-    val unhandledMembers = expressionType.members.filter { member ->
+    val unhandledMembers = unionMembers(expressionType).filter { member ->
         caseTypes.all { caseType -> !isEquivalentType(caseType, member) }
     }
 
@@ -276,9 +276,9 @@ private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type 
     return type
 }
 
-private fun checkTypeConditionOperand(expression: ExpressionNode, context: TypeContext): UnionType {
+private fun checkTypeConditionOperand(expression: ExpressionNode, context: TypeContext): Type {
     val expressionType = inferType(expression, context)
-    if (expressionType is UnionType) {
+    if (stripGenerics(expressionType) is UnionType) {
         return expressionType
     } else {
         throw UnexpectedTypeError(

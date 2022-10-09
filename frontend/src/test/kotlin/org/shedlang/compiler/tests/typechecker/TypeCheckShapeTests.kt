@@ -306,9 +306,9 @@ class TypeCheckShapeTests {
             references = mapOf(typeParameterReference to typeParameterDeclaration)
         )
         typeCheckModuleStatement(node, typeContext)
-        assertThat(typeContext.typeOf(node), isTypeLevelValueType(isParameterizedTypeLevelValue(
+        assertThat(typeContext.typeOf(node), isTypeLevelValueType(isTypeConstructor(
             parameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = isInvariant)),
-            value = isShapeType(
+            genericType = isShapeType(
                 name = isIdentifier("X"),
                 fields = isSequence(
                     isField(name = isIdentifier("a"), type = isTypeParameter(name = isIdentifier("T"), variance = isInvariant))
@@ -330,7 +330,7 @@ class TypeCheckShapeTests {
             references = mapOf(typeParameterReference to typeParameterDeclaration)
         )
         typeCheckModuleStatement(node, typeContext)
-        assertThat(typeContext.typeOf(node), isTypeLevelValueType(isParameterizedTypeLevelValue(
+        assertThat(typeContext.typeOf(node), isTypeLevelValueType(isTypeConstructor(
             parameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = isCovariant))
         )))
     }

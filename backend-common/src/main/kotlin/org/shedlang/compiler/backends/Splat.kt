@@ -18,8 +18,8 @@ fun fieldArgumentsToFieldsProvided(
                 setOf(fieldArgument.name)
             }
             is FieldArgumentNode.Splat -> {
-                val argType = typeOfExpression(fieldArgument.expression) as ShapeType
-                argType.fields.keys
+                val argType = typeOfExpression(fieldArgument.expression)
+                argType.fields!!.keys
             }
         }
         for (previousArgumentProvidesFields in providesFields) {

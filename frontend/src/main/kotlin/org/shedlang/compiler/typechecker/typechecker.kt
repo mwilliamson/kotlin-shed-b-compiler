@@ -629,6 +629,7 @@ internal fun evalEffect(node: TypeLevelExpressionNode?, context: TypeContext): E
 
 internal fun verifyType(expected: Type, actual: Type, source: Source) {
     if (!canCoerce(from = actual, to = expected)) {
+        canCoerce(from = actual, to = expected)
         throw UnexpectedTypeError(expected = expected, actual = actual, source = source)
     }
 }

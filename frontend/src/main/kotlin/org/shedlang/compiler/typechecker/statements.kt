@@ -70,8 +70,6 @@ private fun generateShapeType(
         qualifiedName = context.qualifiedNameType(node.name),
         tagValue = tagValue,
         getFields = fields,
-        typeLevelParameters = typeLevelParameters,
-        typeLevelArguments = typeLevelParameters
     )
     val type = if (node.typeLevelParameters.isEmpty()) {
         shapeType
@@ -239,7 +237,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
             applyTypeLevel(type, type.parameters.map { shapeParameter ->
                 // TODO: handle !!
                 typeLevelParameters.find { unionParameter -> unionParameter.name == shapeParameter.name }!!
-            }) as ShapeType
+            })
         } else {
             throw UnsupportedOperationException()
         }
@@ -249,7 +247,6 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
         name = node.name,
         tag = tag,
         getMembers = lazy { memberTypes },
-        typeLevelArguments = typeLevelParameters
     )
     val type = if (node.typeLevelParameters.isEmpty()) {
         unionType

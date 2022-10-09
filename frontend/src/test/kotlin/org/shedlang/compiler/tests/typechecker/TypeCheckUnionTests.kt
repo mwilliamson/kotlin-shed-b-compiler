@@ -75,38 +75,44 @@ class TypeCheckUnionTests {
         val typeContext = typeContext(moduleName = listOf("Example"))
         typeCheckModuleStatement(node, typeContext)
 
-        assertThat(typeContext.typeOf(node), isTypeLevelValueType(isParameterizedTypeLevelValue(
+        assertThat(typeContext.typeOf(node), isTypeLevelValueType(isTypeConstructor(
             parameters = isSequence(
                 isTypeParameter(name = isIdentifier("T1"), variance = isInvariant),
                 isTypeParameter(name = isIdentifier("T2"), variance = isInvariant)
             ),
-            value = isUnionType(
+            genericType = isUnionType(
                 name = isIdentifier("Union"),
                 members = isSequence(
-                    isShapeType(
-                        name = isIdentifier("Member1"),
-                        typeLevelParameters = isSequence(
-                            isTypeParameter(name = isIdentifier("T1"), variance = isInvariant)
+                    isConstructedType(
+                        constructor = isTypeConstructor(
+                            parameters = isSequence(
+                                isTypeParameter(name = isIdentifier("T1"), variance = isInvariant)
+                            ),
+                            genericType = isShapeType(
+                                name = isIdentifier("Member1"),
+                            ),
                         ),
-                        typeLevelArguments = isSequence(
+                        args = isSequence(
                             isTypeParameter(name = isIdentifier("T1"), variance = isInvariant)
                         )
                     ),
 
-                    isShapeType(
-                        name = isIdentifier("Member2"),
-                        typeLevelParameters = isSequence(
-                            isTypeParameter(name = isIdentifier("T2"), variance = isInvariant)
+                    isConstructedType(
+                        constructor = isTypeConstructor(
+                            parameters = isSequence(
+                                isTypeParameter(name = isIdentifier("T2"), variance = isInvariant)
+                            ),
+                            genericType = isShapeType(
+                                name = isIdentifier("Member2"),
+                            )
                         ),
-                        typeLevelArguments = isSequence(
+                        args = isSequence(
                             isTypeParameter(name = isIdentifier("T2"), variance = isInvariant)
                         )
                     ),
 
                     isShapeType(
                         name = isIdentifier("Member3"),
-                        typeLevelParameters = isSequence(),
-                        typeLevelArguments = isSequence()
                     )
                 )
             )

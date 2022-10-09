@@ -42,6 +42,7 @@ interface Type: TypeLevelValue, TypeGroup {
 
     interface Visitor<T> {
         fun visit(type: BasicType): T
+        fun visit(type: ConstructedType): T
         fun visit(type: FunctionType): T
         fun visit(type: ModuleType): T
         fun visit(type: ShapeType): T
@@ -138,13 +139,25 @@ data class TypeLevelValueType(val value: TypeLevelValue): Type {
                 }.associateBy { field -> field.name }
             } else if (rawValue is Type) {
                 // TODO: better handling of generics
+                // TODO: test this for constructed types
                 val shapeId = freshTypeId()
 
                 val fields = listOf(
                     Field(
                         name = Identifier("fields"),
                         shapeId = shapeId,
-                        type = if (rawValue is ShapeType) shapeFieldsInfoType(rawValue) else UnitType,
+                        type = when (rawValue) {
+                            is ShapeType ->
+                                shapeFieldsInfoType(rawValue)
+                            is ConstructedType ->
+                                when (rawValue.constructor.genericType) {
+                                    is ShapeType ->
+                                        shapeFieldsInfoType(rawValue)
+                                    else -> UnitType
+                                }
+                            else ->
+                                UnitType
+                        },
                     ),
                     Field(
                         // TODO: Restrict to shape types?
@@ -172,21 +185,28 @@ data class TypeLevelValueType(val value: TypeLevelValue): Type {
 fun effectType(effect: Effect) = TypeLevelValueType(effect)
 fun metaType(type: Type) = TypeLevelValueType(type)
 
-private fun shapeFieldsInfoType(type: ShapeType): Type {
+private fun shapeFieldsInfoType(shapeType: Type): Type {
     val shapeId = freshTypeId()
-    val fields = type.fields.values.map { field ->
+    val fields = shapeType.fields!!.values.map { field ->
         Field(
             shapeId = shapeId,
             name = field.name,
-            type = shapeFieldInfoType(type, field),
+            type = shapeFieldInfoType(shapeType, field),
         )
     }
+
+    val shapeTypeName = if (shapeType is ShapeType) {
+        shapeType.qualifiedName
+    } else if (shapeType is ConstructedType && shapeType.constructor.genericType is ShapeType) {
+        shapeType.constructor.genericType.qualifiedName
+    } else {
+        throw InternalCompilerError("is not a shape type", NullSource)
+    }
+
     return lazyShapeType(
         shapeId = shapeId,
-        qualifiedName = type.qualifiedName.addTypeName("Fields"),
+        qualifiedName = shapeTypeName.addTypeName("Fields"),
         tagValue = null,
-        typeLevelParameters = listOf(),
-        typeLevelArguments = listOf(),
         getFields = lazy {
             fields
         },
@@ -229,19 +249,17 @@ val ShapeFieldTypeFunction = TypeConstructor(
         shapeId = shapeFieldTypeFunctionShapeId,
         qualifiedName = QualifiedName.builtin("ShapeField"),
         tagValue = null,
-        typeLevelParameters = shapeFieldTypeFunctionParameters,
-        typeLevelArguments = shapeFieldTypeFunctionParameters,
         getFields = lazy {
             shapeFieldTypeFunctionFields
         },
     )
 )
 
-private fun shapeFieldInfoType(shapeType: ShapeType, field: Field): Type {
+private fun shapeFieldInfoType(shapeType: Type, field: Field): Type {
     return applyTypeLevel(
         ShapeFieldTypeFunction,
         listOf(shapeType, field.type),
-    ) as Type
+    )
 }
 
 fun metaTypeToType(type: Type): Type? {
@@ -256,6 +274,13 @@ fun rawValue(value: TypeLevelValue): TypeLevelValue {
     return when (value) {
         is TypeConstructor -> value.genericType
         else -> value
+    }
+}
+
+fun stripGenerics(type: Type): Type {
+    return when (type) {
+        is ConstructedType -> type.constructor.genericType
+        else -> type
     }
 }
 
@@ -319,6 +344,10 @@ data class TypeParameter(
     override fun <T> accept(visitor: Type.Visitor<T>): T {
         return visitor.visit(this)
     }
+
+    override fun toString(): String {
+        return shortDescription
+    }
 }
 
 data class EffectParameter(
@@ -339,6 +368,10 @@ data class EffectParameter(
             source = source,
         )
     }
+
+    override fun toString(): String {
+        return shortDescription
+    }
 }
 
 enum class Variance {
@@ -357,6 +390,83 @@ data class TypeConstructor(
 
     override fun <T> accept(visitor: TypeLevelValue.Visitor<T>): T {
         return visitor.visit(this)
+    }
+}
+
+data class ConstructedType(
+    val constructor: TypeConstructor,
+    val args: List<TypeLevelValue>,
+): Type {
+    private val bindings = constructor.parameters.zip(args).toMap()
+
+    // TODO: split constructed type into two?
+    fun unionMembers(): List<Type> {
+        if (constructor.genericType !is UnionType) {
+            throw InternalCompilerError("constructed type is not a union", NullSource)
+        }
+        return constructor.genericType.members.map { member ->
+            when (member) {
+                is ShapeType ->
+                    member
+                is ConstructedType ->
+                    replaceTypeLevelValuesInType(member, bindings)
+                else ->
+                    throw InternalCompilerError("unexpected union member", NullSource)
+            }
+        }
+    }
+
+    override val fields: Map<Identifier, Field>? by lazy {
+        val fields = constructor.genericType.fields
+        if (fields == null) {
+            null
+        } else {
+            replaceTypeLevelValuesInFields(fields, bindings)
+        }
+    }
+
+    override fun replaceValues(bindings: TypeLevelBindings): Type {
+        // TODO: test this
+        return copy(args = args.map { arg ->
+            replaceTypeLevelValues(arg, bindings)
+        })
+    }
+
+    override fun <T> accept(visitor: Type.Visitor<T>): T {
+        return visitor.visit(this);
+    }
+
+    override val shortDescription: String
+        get() = appliedTypeShortDescription(constructor.genericType.shortDescription, args)
+
+    override val shapeId: Int?
+        get() = constructor.genericType.shapeId
+
+    override fun toString(): String {
+        return shortDescription
+    }
+}
+
+// TODO: Need a better way of handling this?
+fun unionMembers(type: Type): List<Type>  {
+    when (type) {
+        is UnionType ->
+            return type.members
+        is ConstructedType ->
+            return type.unionMembers()
+        else ->
+            throw InternalCompilerError("cannot get union members", NullSource)
+    }
+}
+
+fun unionTag(type: Type): Tag {
+    when (type) {
+        is UnionType ->
+            return type.tag
+        is ConstructedType ->
+            return unionTag(type.constructor.genericType)
+        else ->
+            throw InternalCompilerError("cannot get union tag", NullSource)
     }
 }
 
@@ -550,31 +660,21 @@ interface ShapeType: Type {
     override val shapeId: Int
     val tagValue: TagValue?
     override val fields: Map<Identifier, Field>
-    val typeLevelParameters: List<TypeLevelParameter>
-    val typeLevelArguments: List<TypeLevelValue>
 
     val name: Identifier
         get() = qualifiedName.shortName
 
     override val shortDescription: String
-        get() {
-            return if (typeLevelArguments.isEmpty()) {
-                name.value
-            } else {
-                appliedTypeShortDescription(name, typeLevelArguments)
-            }
-        }
+        get() = name.value
 
     override fun replaceValues(bindings: TypeLevelBindings): Type {
         return LazyShapeType(
             qualifiedName = qualifiedName,
             getAllFields = lazy {
-                fields.mapValues { field -> replaceTypeLevelValuesInField(field.value, bindings) }
+                replaceTypeLevelValuesInFields(fields, bindings)
             },
             tagValue = tagValue,
             shapeId = shapeId,
-            typeLevelParameters = typeLevelParameters,
-            typeLevelArguments = typeLevelArguments.map { argument -> replaceTypeLevelValues(argument, bindings) }
         )
     }
 
@@ -600,8 +700,6 @@ fun lazyShapeType(
     qualifiedName: QualifiedName,
     tagValue: TagValue?,
     getFields: Lazy<List<Field>>,
-    typeLevelParameters: List<TypeLevelParameter>,
-    typeLevelArguments: List<TypeLevelValue>
 ) = LazyShapeType(
     shapeId = shapeId,
     qualifiedName = qualifiedName,
@@ -609,8 +707,6 @@ fun lazyShapeType(
         getFields.value.associateBy { field -> field.name }
     },
     tagValue = tagValue,
-    typeLevelParameters = typeLevelParameters,
-    typeLevelArguments = typeLevelArguments
 )
 
 class LazyShapeType(
@@ -618,8 +714,6 @@ class LazyShapeType(
     getAllFields: Lazy<Map<Identifier, Field>>,
     override val shapeId: Int = freshTypeId(),
     override val tagValue: TagValue?,
-    override val typeLevelParameters: List<TypeLevelParameter>,
-    override val typeLevelArguments: List<TypeLevelValue>
 ): ShapeType {
     override val fields: Map<Identifier, Field> by getAllFields
 }
@@ -628,7 +722,6 @@ interface UnionType: Type {
     val name: Identifier
     val tag: Tag
     val members: List<Type>
-    val typeLevelArguments: List<TypeLevelValue>
 
     override fun replaceValues(bindings: TypeLevelBindings): Type {
         return LazyUnionType(
@@ -637,7 +730,6 @@ interface UnionType: Type {
             lazy {
                 members.map { memberType -> replaceTypeLevelValuesInType(memberType, bindings) as ShapeType }
             },
-            typeLevelArguments = typeLevelArguments.map { argument -> replaceTypeLevelValues(argument, bindings) }
         )
     }
 
@@ -658,9 +750,6 @@ data class AnonymousUnionType(
     override val name: Identifier = Identifier("_Union" + freshTypeId()),
     override val members: List<Type>
 ): UnionType {
-    override val typeLevelArguments: List<TypeLevelValue>
-        get() = listOf()
-
     override val shortDescription: String
         get() = members.joinToString(" | ") {
             member -> member.shortDescription
@@ -684,7 +773,7 @@ fun union(left: Type, right: Type, source: Source = NullSource): Type {
         val leftMembers = findMembers(left)
         val rightMembers = findMembers(right)
         val members = (leftMembers + rightMembers).distinct().map { member ->
-            if (member is ShapeType) {
+            if (stripGenerics(member) is ShapeType) {
                 member
             } else {
                 throw CannotUnionTypesError(left, right, source = source)
@@ -692,7 +781,7 @@ fun union(left: Type, right: Type, source: Source = NullSource): Type {
         }
 
         val tags = members.map { member ->
-            val tagValue = member.tagValue
+            val tagValue = (stripGenerics(member) as ShapeType).tagValue
             if (tagValue == null) {
                 throw CannotUnionTypesError(left, right, source = source)
             } else {
@@ -719,14 +808,9 @@ data class LazyUnionType(
     override val tag: Tag,
     override val name: Identifier,
     private val getMembers: Lazy<List<Type>>,
-    override val typeLevelArguments: List<TypeLevelValue>
 ): UnionType {
     override val shortDescription: String
-        get() = if (typeLevelArguments.isEmpty()) {
-            name.value
-        } else {
-            appliedTypeShortDescription(name, typeLevelArguments)
-        }
+        get() = name.value
 
     override val members: List<Type> by getMembers
 }
@@ -790,9 +874,9 @@ fun contravariantTypeParameter(name: String, source: Source = NullSource) = Type
 
 fun effectParameter(name: String, source: Source = NullSource) = EffectParameter(Identifier(name), source = source)
 
-private fun appliedTypeShortDescription(name: Identifier, parameters: List<TypeLevelValue>): String {
+private fun appliedTypeShortDescription(name: String, parameters: List<TypeLevelValue>): String {
     val parametersString = parameters.joinToString(separator = ", ", transform = { type -> type.shortDescription })
-    return name.value + "[" + parametersString + "]"
+    return "$name[$parametersString]"
 }
 
 data class ValidateTypeResult(val errors: List<String>) {
@@ -828,6 +912,11 @@ fun validateTypeLevelValue(value: TypeLevelValue): ValidateTypeResult {
 fun validateType(type: Type): ValidateTypeResult {
     return type.accept(object : Type.Visitor<ValidateTypeResult> {
         override fun visit(type: BasicType): ValidateTypeResult {
+            return ValidateTypeResult.success
+        }
+
+        override fun visit(type: ConstructedType): ValidateTypeResult {
+            // TODO: check params and args?
             return ValidateTypeResult.success
         }
 
@@ -889,19 +978,21 @@ fun validateType(type: Type): ValidateTypeResult {
 }
 
 fun applyTypeLevel(
-    receiver: TypeConstructor,
+    constructor: TypeConstructor,
     arguments: List<TypeLevelValue>,
     source: Source = NullSource
-): TypeLevelValue {
-    if (receiver.parameters.size != arguments.size) {
+): ConstructedType {
+    if (constructor.parameters.size != arguments.size) {
         throw InternalCompilerError(
-            "parameter count (${receiver.parameters.size}) != argument count (${arguments.size})",
+            "parameter count (${constructor.parameters.size}) != argument count (${arguments.size})",
             source = source
         )
     }
 
-    val bindings = receiver.parameters.zip(arguments).toMap()
-    return replaceTypeLevelValues(receiver.genericType, bindings = bindings)
+    return ConstructedType(
+        constructor = constructor,
+        args = arguments,
+    )
 }
 
 typealias TypeLevelBindings = Map<TypeLevelParameter, TypeLevelValue>
@@ -938,6 +1029,9 @@ fun replaceTypeLevelValuesInType(type: Type, bindings: TypeLevelBindings): Type 
     }
 }
 
+private fun replaceTypeLevelValuesInFields(fields: Map<Identifier, Field>, bindings: TypeLevelBindings) =
+    fields.mapValues { field -> replaceTypeLevelValuesInField(field.value, bindings) }
+
 private fun replaceTypeLevelValuesInField(field: Field, bindings: TypeLevelBindings) =
     field.mapType { type ->
         replaceTypeLevelValuesInType(type, bindings)
@@ -964,32 +1058,56 @@ data class Discriminator(
 )
 
 fun findDiscriminator(sourceType: Type, targetType: TypeLevelValue): Discriminator? {
-    // TODO: handle generics
+    // TODO: test handling of sourceType being a ConstructedType
 
-    if (sourceType !is UnionType) {
+    if (!(sourceType is UnionType || (sourceType is ConstructedType && sourceType.constructor.genericType is UnionType))) {
         return null
     }
 
-    val tagValue = (rawValue(targetType) as? ShapeType)?.tagValue
-    if (tagValue?.tag != sourceType.tag) {
+    val tagValue = tagValue(targetType)
+    if (tagValue?.tag != unionTag(sourceType)) {
         return null
     }
 
-    val matchingMembers = sourceType.members.filter { member -> (member as ShapeType).tagValue == tagValue }
+    val matchingMembers = unionMembers(sourceType).filter { member ->
+        tagValue(member) == tagValue
+    }
     val refinedType = unionAll(matchingMembers)
 
-    if (targetType is ShapeType) {
-        if (!canCoerce(from = refinedType, to = targetType)) {
+    when (targetType) {
+        is ShapeType -> {
+            if (!canCoerce(from = refinedType, to = targetType)) {
+                return null
+            }
+        }
+        is ConstructedType -> {
+            if (!canCoerce(from = refinedType, to = targetType)) {
+                return null
+            }
+        }
+        is TypeConstructor -> {
+            // TODO: test this
+            if (!canCoerce(from = refinedType, to = ConstructedType(targetType, targetType.parameters), freeParameters = targetType.parameters.toSet())) {
+                return null
+            }
+        }
+        else -> {
             return null
         }
-    } else if (targetType is TypeConstructor) {
-        val targetTypeValue = targetType.genericType
-        if (targetTypeValue !is Type || !canCoerce(from = refinedType, to = targetTypeValue, freeParameters = targetType.parameters.toSet())) {
-            return null
-        }
-    } else {
-        return null
     }
 
     return Discriminator(tagValue = tagValue, targetType = refinedType)
+}
+
+private fun tagValue(targetType: TypeLevelValue): TagValue? {
+    return when (targetType) {
+        is ShapeType ->
+            targetType.tagValue
+        is ConstructedType ->
+            tagValue(targetType.constructor)
+        is TypeConstructor ->
+            tagValue(targetType.genericType)
+        else ->
+            null
+    }
 }

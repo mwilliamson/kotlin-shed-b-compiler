@@ -1,6 +1,7 @@
 package org.shedlang.compiler.tests.typechecker
 
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.inferType
@@ -31,12 +32,9 @@ class TypeCheckTypeLevelCallTests {
         )
 
         assertThat(type, isMetaType(
-            isShapeType(
-                name = isIdentifier("Box"),
-                typeLevelArguments = isSequence(isBoolType),
-                fields = isSequence(
-                    isField(name = isIdentifier("value"), type = isBoolType)
-                )
+            isConstructedType(
+                constructor = equalTo(boxType),
+                args = isSequence(isBoolType),
             )
         ))
     }

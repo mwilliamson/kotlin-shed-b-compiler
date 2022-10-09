@@ -83,22 +83,27 @@ internal fun compiledType(objectType: TypeLevelValue): CompiledType {
             )
         )
     } else {
-        val rawType = rawValue(objectType)
-        return when (rawType) {
+        return when (objectType) {
             is ModuleType ->
                 CompiledObjectType(
-                    fieldTypes = rawType.fields.map { (name, field) -> name to field.type },
+                    fieldTypes = objectType.fields.map { (name, field) -> name to field.type },
                     tagValue = null
                 )
 
             is ShapeType ->
                 CompiledObjectType(
-                    fieldTypes = rawType.fields.map { field -> field.key to field.value.type },
-                    tagValue = rawType.tagValue
+                    fieldTypes = objectType.fields.map { field -> field.key to field.value.type },
+                    tagValue = objectType.tagValue
                 )
 
+            is ConstructedType ->
+                compiledType(objectType.constructor.genericType)
+
+            is TypeConstructor ->
+                compiledType(objectType.genericType)
+
             else ->
-                throw UnsupportedOperationException("type was: ${rawType.shortDescription}")
+                throw UnsupportedOperationException("type was: ${objectType.shortDescription}")
         }
     }
 }

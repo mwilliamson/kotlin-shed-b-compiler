@@ -35,21 +35,27 @@ fun isTypeAlias(
     has(TypeAlias::aliasedType, aliasedType)
 ))
 
+fun isConstructedType(
+    constructor: Matcher<TypeConstructor> = anything,
+    args: Matcher<List<TypeLevelValue>> = anything,
+    fields: Matcher<Collection<Field>?> = anything,
+): Matcher<TypeLevelValue> = cast(allOf(
+    has(ConstructedType::constructor, constructor),
+    has(ConstructedType::args, args),
+    has("fields", { type -> type.fields?.values }, fields),
+))
+
 fun isShapeType(
     shapeId: Matcher<Int> = anything,
     qualifiedName: Matcher<QualifiedName> = anything,
     name: Matcher<Identifier> = anything,
     tagValue: Matcher<TagValue?> = anything,
-    typeLevelParameters: Matcher<List<TypeLevelParameter>> = anything,
-    typeLevelArguments: Matcher<List<TypeLevelValue>> = anything,
     fields: Matcher<Collection<Field>> = anything
 ): Matcher<TypeLevelValue> = cast(allOf(
     has(ShapeType::shapeId, shapeId),
     has(ShapeType::qualifiedName, qualifiedName),
     has(ShapeType::name, name),
     has(ShapeType::tagValue, tagValue),
-    has(ShapeType::typeLevelParameters, typeLevelParameters),
-    has(ShapeType::typeLevelArguments, typeLevelArguments),
     has("fields", { type -> type.fields.values }, fields),
 ))
 
@@ -66,12 +72,10 @@ fun isField(
 fun isUnionType(
     name: Matcher<Identifier> = anything,
     tag: Matcher<Tag> = anything,
-    typeLevelArguments: Matcher<List<TypeLevelValue>> = anything,
     members: Matcher<List<Type>> = anything
 ): Matcher<TypeLevelValue> = cast(allOf(
     has(UnionType::name, name),
     has(UnionType::tag, tag),
-    has(UnionType::typeLevelArguments, typeLevelArguments),
     has(UnionType::members, members)
 ))
 
@@ -95,12 +99,12 @@ fun isEffectType(effect: Matcher<Effect>) = isTypeLevelValueType(cast(effect))
 fun isMetaType(value: Matcher<Type>): Matcher<TypeLevelValue> = isTypeLevelValueType(cast(value))
 fun isTypeLevelValueType(value: Matcher<TypeLevelValue>): Matcher<TypeLevelValue> = cast(has(TypeLevelValueType::value, value))
 
-fun isParameterizedTypeLevelValue(
+fun isTypeConstructor(
     parameters: Matcher<List<TypeLevelParameter>>,
-    value: Matcher<TypeLevelValue> = anything
+    genericType: Matcher<TypeLevelValue> = anything
 ): Matcher<TypeLevelValue> = cast(allOf(
     has(TypeConstructor::parameters, parameters),
-    has(TypeConstructor::genericType, cast(value))
+    has(TypeConstructor::genericType, cast(genericType))
 ))
 
 fun isTypeParameter(

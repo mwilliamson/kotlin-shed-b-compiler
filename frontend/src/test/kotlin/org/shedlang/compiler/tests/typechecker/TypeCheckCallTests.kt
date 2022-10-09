@@ -517,12 +517,10 @@ class TypeCheckCallTests {
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to TypeLevelValueType(shapeType)))
         val type = inferCallType(node, typeContext)
 
-        assertThat(type, isShapeType(
-            name = isIdentifier("Box"),
-            typeLevelArguments = isSequence(isBoolType),
-            fields = isSequence(isField(name = isIdentifier("value"), type = isBoolType))
-        )
-        )
+        assertThat(type, isConstructedType(
+            constructor = equalTo(shapeType),
+            args = isSequence(isBoolType),
+        ))
     }
 
     @Test
@@ -548,9 +546,9 @@ class TypeCheckCallTests {
         ))
         val type = inferCallType(node, typeContext)
 
-        assertThat(type, isShapeType(
-            name = isIdentifier("Sink"),
-            typeLevelArguments = isSequence(isIntType)
+        assertThat(type, isConstructedType(
+            constructor = equalTo(shapeType),
+            args = isSequence(isIntType)
         ))
     }
 
@@ -589,10 +587,9 @@ class TypeCheckCallTests {
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to TypeLevelValueType(shapeType)))
 
         val type = inferCallType(node, typeContext)
-        assertThat(type, isShapeType(
-            typeLevelArguments = isSequence(isNothingType)
-        )
-        )
+        assertThat(type, isConstructedType(
+            args = isSequence(isNothingType)
+        ))
     }
 
     @Test
@@ -610,10 +607,9 @@ class TypeCheckCallTests {
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to TypeLevelValueType(shapeType)))
 
         val type = inferCallType(node, typeContext)
-        assertThat(type, isShapeType(
-            typeLevelArguments = isSequence(isAnyType)
-        )
-        )
+        assertThat(type, isConstructedType(
+            args = isSequence(isAnyType)
+        ))
     }
 
     @Test
