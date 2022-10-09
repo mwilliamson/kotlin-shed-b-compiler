@@ -126,10 +126,10 @@ private class WasmShapeCompiler(
         val (context2, fieldsObjectPointer) = malloc("fields", fieldsObjectLayout, context)
 
         val context3 = shapeType.fields.values.fold(context2) { currentContext, field ->
-            val fieldType = stripGenerics(typeRegistry.fieldType(fieldsType, field.name)!!)
+            val fieldType = typeRegistry.fieldType(fieldsType, field.name)!!
             val (currentContext2, fieldObjectPointer) = compileCreateFieldObject(
                 field = field,
-                fieldObjectLayout = WasmObjects.shapeLayout(fieldType as SimpleShapeType),
+                fieldObjectLayout = WasmObjects.shapeLayout(fieldType as ShapeType),
                 context = currentContext
             )
             compileStoreFieldObject(
