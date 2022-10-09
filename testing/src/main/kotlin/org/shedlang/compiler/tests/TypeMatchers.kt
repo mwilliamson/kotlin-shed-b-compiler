@@ -40,8 +40,8 @@ fun isConstructedType(
     args: Matcher<List<TypeLevelValue>> = anything,
     fields: Matcher<Collection<Field>?> = anything,
 ): Matcher<TypeLevelValue> = cast(allOf(
-    has(ConstructedType2::constructor, constructor),
-    has(ConstructedType2::args, args),
+    has(ConstructedType::constructor, constructor),
+    has(ConstructedType::args, args),
     has("fields", { type -> type.fields?.values }, fields),
 ))
 

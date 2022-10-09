@@ -264,7 +264,7 @@ fun rawValue(value: TypeLevelValue): TypeLevelValue {
 
 fun stripGenerics(type: Type): Type {
     return when (type) {
-        is ConstructedType2 -> type.constructor.genericType
+        is ConstructedType -> type.constructor.genericType
         else -> type
     }
 }
@@ -560,7 +560,7 @@ data class LazyTypeAlias(
         get() = name.value
 }
 
-interface ConstructedType2 : Type {
+interface ConstructedType : Type {
     val constructor: TypeConstructor
     val args: List<TypeLevelValue>
 }
@@ -596,7 +596,7 @@ data class ConstructedShapeType(
     override val constructor: TypeConstructor,
     private val genericType: SimpleShapeType,
     override val args: List<TypeLevelValue>,
-): ConstructedType2, ShapeType {
+): ConstructedType, ShapeType {
 
     private val bindings = constructor.parameters.zip(args).toMap()
 
@@ -701,7 +701,7 @@ data class ConstructedUnionType(
     override val constructor: TypeConstructor,
     private val genericType: SimpleUnionType,
     override val args: List<TypeLevelValue>,
-) : ConstructedType2, UnionType {
+) : ConstructedType, UnionType {
     private val bindings = constructor.parameters.zip(args).toMap()
 
     override val tag: Tag
@@ -963,7 +963,7 @@ fun applyTypeLevel(
     constructor: TypeConstructor,
     arguments: List<TypeLevelValue>,
     source: Source = NullSource
-): ConstructedType2 {
+): ConstructedType {
     if (constructor.parameters.size != arguments.size) {
         throw InternalCompilerError(
             "parameter count (${constructor.parameters.size}) != argument count (${arguments.size})",
