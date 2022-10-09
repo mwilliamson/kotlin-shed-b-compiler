@@ -577,6 +577,8 @@ interface SimpleShapeType : ShapeType {
         get() = name.value
 
     override fun replaceValues(bindings: TypeLevelBindings): Type {
+        // TODO: this is only safe if shape types defined in functions can't escape those functions
+        // We should make sure that's the case
         return this
     }
 
@@ -680,13 +682,9 @@ interface SimpleUnionType: UnionType {
     val name: Identifier
 
     override fun replaceValues(bindings: TypeLevelBindings): Type {
-        return LazySimpleUnionType(
-            tag,
-            name,
-            lazy {
-                members.map { memberType -> replaceTypeLevelValuesInType(memberType, bindings) as SimpleShapeType }
-            },
-        )
+        // TODO: this is only safe if union types defined in functions can't escape those functions
+        // We should make sure that's the case
+        return this
     }
 }
 
@@ -727,13 +725,19 @@ data class ConstructedUnionType(
 
 data class AnonymousUnionType(
     override val tag: Tag,
-    override val name: Identifier = Identifier("_Union" + freshTypeId()),
     override val members: List<Type>
-): SimpleUnionType {
+): UnionType {
     override val shortDescription: String
         get() = members.joinToString(" | ") {
             member -> member.shortDescription
         }
+
+    override fun replaceValues(bindings: TypeLevelBindings): Type {
+        return AnonymousUnionType(
+            tag,
+            members.map { memberType -> replaceTypeLevelValuesInType(memberType, bindings) as ShapeType },
+        )
+    }
 }
 
 // TODO: Remove default for source
@@ -745,7 +749,7 @@ fun union(left: Type, right: Type, source: Source = NullSource): Type {
     } else {
         fun findMembers(type: Type): List<Type> {
             return when (type) {
-                is SimpleUnionType -> type.members
+                is UnionType -> type.members
                 else -> listOf(type)
             }
         }
@@ -761,7 +765,7 @@ fun union(left: Type, right: Type, source: Source = NullSource): Type {
         }
 
         val tags = members.map { member ->
-            val tagValue = (member as ShapeType).tagValue
+            val tagValue = member.tagValue
             if (tagValue == null) {
                 throw CannotUnionTypesError(left, right, source = source)
             } else {
