@@ -676,7 +676,6 @@ class LazySimpleShapeType(
 }
 
 interface UnionType : Type {
-    val name: Identifier
     val tag: Tag
     val members: List<Type>
 
@@ -692,6 +691,8 @@ interface UnionType : Type {
 }
 
 interface SimpleUnionType: UnionType {
+    val name: Identifier
+
     override fun replaceValues(bindings: TypeLevelBindings): Type {
         return LazySimpleUnionType(
             tag,
@@ -709,10 +710,6 @@ data class ConstructedUnionType(
     override val args: List<TypeLevelValue>,
 ) : ConstructedType2, UnionType {
     private val bindings = constructor.parameters.zip(args).toMap()
-
-    // TODO: where is this used? Should include type args, but identifiers cannot have such things
-    override val name: Identifier
-        get() = genericType.name
 
     override val tag: Tag
         get() = genericType.tag

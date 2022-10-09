@@ -70,13 +70,21 @@ fun isField(
 )
 
 fun isUnionType(
+    tag: Matcher<Tag> = anything,
+    members: Matcher<List<Type>> = anything
+): Matcher<TypeLevelValue> = cast(allOf(
+    has(UnionType::tag, tag),
+    has(UnionType::members, members)
+))
+
+fun isSimpleUnionType(
     name: Matcher<Identifier> = anything,
     tag: Matcher<Tag> = anything,
     members: Matcher<List<Type>> = anything
 ): Matcher<TypeLevelValue> = cast(allOf(
-    has(UnionType::name, name),
-    has(UnionType::tag, tag),
-    has(UnionType::members, members)
+    has(SimpleUnionType::name, name),
+    has(SimpleUnionType::tag, tag),
+    has(SimpleUnionType::members, members)
 ))
 
 fun isTag(moduleName: List<String>, name: String) = isTag(QualifiedName.topLevelType(moduleName, name))
