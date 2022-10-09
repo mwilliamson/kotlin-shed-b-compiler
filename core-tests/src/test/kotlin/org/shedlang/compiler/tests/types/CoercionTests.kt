@@ -564,19 +564,19 @@ class CoercionTests {
     fun whenTypeParameterIsBoundThenBoundValueHasTypesReplaced() {
         val typeParameter1 = invariantTypeParameter("T1")
         val typeParameter2 = invariantTypeParameter("T2")
+        val parametrizedShapeType = parametrizedShapeType(parameters = listOf(invariantTypeParameter("T")))
 
         val result = coerce(
-            constraints = listOf(typeParameter2 to IntType, typeParameter1 to shapeType(fields = listOf(field(name = "x", type = typeParameter2)))),
+            constraints = listOf(
+                typeParameter2 to IntType,
+                typeParameter1 to applyTypeLevel(parametrizedShapeType, listOf(typeParameter2))
+            ),
             parameters = setOf(typeParameter1, typeParameter2)
         )
 
         assertThat(result, isSuccess(
             typeParameter2 to isIntType,
-            typeParameter1 to isShapeType(
-                fields = isSequence(
-                    isField(type = isIntType)
-                )
-            ),
+            typeParameter1 to isConstructedType(args = isSequence(isIntType)),
         ))
     }
 
@@ -584,18 +584,18 @@ class CoercionTests {
     fun whenTypeParameterIsBoundThenExistingBoundValueHaveTypesReplaced() {
         val typeParameter1 = invariantTypeParameter("T1")
         val typeParameter2 = invariantTypeParameter("T2")
+        val parametrizedShapeType = parametrizedShapeType(parameters = listOf(invariantTypeParameter("T")))
 
         val result = coerce(
-            constraints = listOf(typeParameter1 to shapeType(fields = listOf(field(name = "x", type = typeParameter2))), typeParameter2 to IntType),
+            constraints = listOf(
+                typeParameter1 to applyTypeLevel(parametrizedShapeType, listOf(typeParameter2)),
+                typeParameter2 to IntType
+            ),
             parameters = setOf(typeParameter1, typeParameter2)
         )
 
         assertThat(result, isSuccess(
-            typeParameter1 to isShapeType(
-                fields = isSequence(
-                    isField(type = isIntType)
-                )
-            ),
+            typeParameter1 to isConstructedType(args = isSequence(isIntType)),
             typeParameter2 to isIntType,
         ))
     }

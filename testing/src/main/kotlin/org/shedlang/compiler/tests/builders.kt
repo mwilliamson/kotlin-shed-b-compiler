@@ -610,7 +610,7 @@ fun typeAlias(
 ) = LazyTypeAlias(name = Identifier(name), getAliasedType = lazy { aliasedType })
 
 fun parametrizedShapeType(
-    name: String,
+    name: String = "Shape",
     parameters: List<TypeLevelParameter>,
     tagValue: TagValue? = null,
     fields: List<Field> = listOf()

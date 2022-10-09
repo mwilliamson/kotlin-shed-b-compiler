@@ -584,14 +584,7 @@ interface SimpleShapeType : ShapeType {
         get() = name.value
 
     override fun replaceValues(bindings: TypeLevelBindings): Type {
-        return LazySimpleShapeType(
-            qualifiedName = qualifiedName,
-            getAllFields = lazy {
-                replaceTypeLevelValuesInFields(fields, bindings)
-            },
-            tagValue = tagValue,
-            shapeId = shapeId,
-        )
+        return this
     }
 
     override fun <T> accept(visitor: Type.Visitor<T>): T {
