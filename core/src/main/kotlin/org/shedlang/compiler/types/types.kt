@@ -262,13 +262,6 @@ fun rawValue(value: TypeLevelValue): TypeLevelValue {
     }
 }
 
-fun stripGenerics(type: Type): Type {
-    return when (type) {
-        is ConstructedType -> type.constructor.genericType
-        else -> type
-    }
-}
-
 private var nextEffectParameterId = 0
 fun freshEffectParameterId() = nextEffectParameterId++
 
@@ -760,7 +753,7 @@ fun union(left: Type, right: Type, source: Source = NullSource): Type {
         val leftMembers = findMembers(left)
         val rightMembers = findMembers(right)
         val members = (leftMembers + rightMembers).distinct().map { member ->
-            if (stripGenerics(member) is SimpleShapeType) {
+            if (member is ShapeType) {
                 member
             } else {
                 throw CannotUnionTypesError(left, right, source = source)
