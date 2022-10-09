@@ -700,15 +700,7 @@ data class ConstructedUnionType(
 
     override val members: List<Type> by lazy {
         genericType.members.map { member ->
-            // TODO: simplify this
-            when (member) {
-                is SimpleShapeType ->
-                    member
-                is ConstructedShapeType ->
-                    replaceTypeLevelValuesInType(member, bindings)
-                else ->
-                    throw InternalCompilerError("unexpected union member", NullSource)
-            }
+            replaceTypeLevelValuesInType(member, bindings)
         }
     }
 
