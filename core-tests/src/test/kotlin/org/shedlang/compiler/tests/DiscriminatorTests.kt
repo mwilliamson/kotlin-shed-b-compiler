@@ -83,7 +83,7 @@ class DiscriminatorTests {
             )
         )
         val member2 = shapeType(name = "Member2", tagValue = tagValue(tag, "Member2"))
-        val union = unionType("Union", tag = tag, members = listOf(applyTypeLevel(member1, listOf(IntType)), member2))
+        val union = unionType("Union", tag = tag, members = listOf(applyTypeLevel(member1, listOf(IntType)) as ShapeType, member2))
 
         val discriminator = findDiscriminator(sourceType = union, targetType = applyTypeLevel(member1, listOf(IntType)))
 
@@ -108,7 +108,7 @@ class DiscriminatorTests {
             )
         )
         val member2 = shapeType(name = "Member2", tagValue = tagValue(tag, "Member2"))
-        val union = unionType("Union", tag = tag, members = listOf(applyTypeLevel(member1, listOf(IntType)) as Type, member2))
+        val union = unionType("Union", tag = tag, members = listOf(applyTypeLevel(member1, listOf(IntType)) as ShapeType, member2))
 
         val discriminator = findDiscriminator(sourceType = union, targetType = applyTypeLevel(member1, listOf(AnyType)))
 
@@ -133,7 +133,7 @@ class DiscriminatorTests {
             )
         )
         val member2 = shapeType(name = "Member2", tagValue = tagValue(tag, "Member2"))
-        val union = unionType("Union", tag = tag, members = listOf(applyTypeLevel(member1, listOf(AnyType)) as Type, member2))
+        val union = unionType("Union", tag = tag, members = listOf(applyTypeLevel(member1, listOf(AnyType)) as ShapeType, member2))
 
         val discriminator = findDiscriminator(sourceType = union, targetType = applyTypeLevel(member1, listOf(IntType)))
 
@@ -155,7 +155,7 @@ class DiscriminatorTests {
             )
         )
         val member2 = shapeType(name = "Member2", tagValue = tagValue(tag, "Member2"))
-        val union = unionType("Union", tag = tag, members = listOf(applyTypeLevel(member1, listOf(IntType)) as Type, member2))
+        val union = unionType("Union", tag = tag, members = listOf(applyTypeLevel(member1, listOf(IntType)) as ShapeType, member2))
 
         val discriminator = findDiscriminator(sourceType = union, targetType = member1)
 
@@ -188,7 +188,7 @@ class DiscriminatorTests {
                 field(name = "value2", type = typeParameter)
             )
         )
-        val union = unionType("Union", tag = tag, members = listOf(applyTypeLevel(member1, listOf(IntType)) as Type, applyTypeLevel(member2, listOf(IntType)) as Type))
+        val union = unionType("Union", tag = tag, members = listOf(applyTypeLevel(member1, listOf(IntType)) as ShapeType, applyTypeLevel(member2, listOf(IntType)) as ShapeType))
 
         val discriminator = findDiscriminator(sourceType = union, targetType = member1)
 

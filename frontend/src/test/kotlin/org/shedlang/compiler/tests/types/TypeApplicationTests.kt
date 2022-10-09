@@ -104,7 +104,7 @@ class TypeApplicationTests {
         val union = parametrizedUnionType(
             "Union",
             parameters = listOf(unionTypeParameter),
-            members = listOf(applyTypeLevel(shapeType, listOf(unionTypeParameter)))
+            members = listOf(applyTypeLevel(shapeType, listOf(unionTypeParameter)) as ShapeType)
         )
 
         val result = applyTypeLevel(union, listOf(BoolType))

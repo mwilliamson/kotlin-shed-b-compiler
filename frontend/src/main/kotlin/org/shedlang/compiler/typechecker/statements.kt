@@ -237,7 +237,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
             applyTypeLevel(type, type.parameters.map { shapeParameter ->
                 // TODO: handle !!
                 typeLevelParameters.find { unionParameter -> unionParameter.name == shapeParameter.name }!!
-            })
+            }) as ShapeType
         } else {
             throw UnsupportedOperationException()
         }

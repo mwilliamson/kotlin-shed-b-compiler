@@ -645,7 +645,7 @@ fun parametrizedUnionType(
     name: String,
     tag: Tag = tag(name = name),
     parameters: List<TypeLevelParameter> = listOf(invariantTypeParameter("T")),
-    members: List<Type> = listOf()
+    members: List<ShapeType> = listOf()
 ) = TypeConstructor(
     genericType = LazySimpleUnionType(
         name = Identifier(name),
@@ -662,7 +662,7 @@ fun tagValue(tag: Tag, value: String) = TagValue(tag, Identifier(value))
 fun unionType(
     name: String = "Union",
     tag: Tag = tag(name = name),
-    members: List<Type> = listOf()
+    members: List<ShapeType> = listOf()
 ) = LazySimpleUnionType(
     name = Identifier(name),
     tag = tag,

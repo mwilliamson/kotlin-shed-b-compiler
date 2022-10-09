@@ -665,7 +665,7 @@ class LazySimpleShapeType(
 
 interface UnionType : Type {
     val tag: Tag
-    val members: List<Type>
+    val members: List<ShapeType>
 
     override val shapeId: Int?
         get() = null
@@ -698,9 +698,9 @@ data class ConstructedUnionType(
     override val tag: Tag
         get() = genericType.tag
 
-    override val members: List<Type> by lazy {
+    override val members: List<ShapeType> by lazy {
         genericType.members.map { member ->
-            replaceTypeLevelValuesInType(member, bindings)
+            replaceTypeLevelValuesInType(member, bindings) as ShapeType
         }
     }
 
@@ -717,7 +717,7 @@ data class ConstructedUnionType(
 
 data class AnonymousUnionType(
     override val tag: Tag,
-    override val members: List<Type>
+    override val members: List<ShapeType>
 ): UnionType {
     override val shortDescription: String
         get() = members.joinToString(" | ") {
@@ -783,12 +783,12 @@ fun unionAll(members: List<Type>) = members.reduce(::union)
 data class LazySimpleUnionType(
     override val tag: Tag,
     override val name: Identifier,
-    private val getMembers: Lazy<List<Type>>,
+    private val getMembers: Lazy<List<ShapeType>>,
 ): SimpleUnionType {
     override val shortDescription: String
         get() = name.value
 
-    override val members: List<Type> by getMembers
+    override val members: List<ShapeType> by getMembers
 }
 
 fun functionType(
