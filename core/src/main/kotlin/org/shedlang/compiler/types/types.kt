@@ -768,7 +768,7 @@ fun union(left: Type, right: Type, source: Source = NullSource): Type {
         }
 
         val tags = members.map { member ->
-            val tagValue = (stripGenerics(member) as SimpleShapeType).tagValue
+            val tagValue = (member as ShapeType).tagValue
             if (tagValue == null) {
                 throw CannotUnionTypesError(left, right, source = source)
             } else {
