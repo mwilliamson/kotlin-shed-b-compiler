@@ -99,8 +99,8 @@ fun isParameterizedTypeLevelValue(
     parameters: Matcher<List<TypeLevelParameter>>,
     value: Matcher<TypeLevelValue> = anything
 ): Matcher<TypeLevelValue> = cast(allOf(
-    has(ParameterizedTypeLevelValue::parameters, parameters),
-    has(ParameterizedTypeLevelValue::value, cast(value))
+    has(TypeConstructor::parameters, parameters),
+    has(TypeConstructor::genericType, cast(value))
 ))
 
 fun isTypeParameter(

@@ -223,9 +223,9 @@ val shapeFieldTypeFunctionFields = listOf(
         ),
     ),
 )
-val ShapeFieldTypeFunction = ParameterizedTypeLevelValue(
+val ShapeFieldTypeFunction = TypeConstructor(
     parameters = shapeFieldTypeFunctionParameters,
-    value = lazyShapeType(
+    genericType = lazyShapeType(
         shapeId = shapeFieldTypeFunctionShapeId,
         qualifiedName = QualifiedName.builtin("ShapeField"),
         tagValue = null,
@@ -254,7 +254,7 @@ fun metaTypeToType(type: Type): Type? {
 
 fun rawValue(value: TypeLevelValue): TypeLevelValue {
     return when (value) {
-        is ParameterizedTypeLevelValue -> value.value
+        is TypeConstructor -> value.genericType
         else -> value
     }
 }
@@ -347,9 +347,9 @@ enum class Variance {
     CONTRAVARIANT
 }
 
-data class ParameterizedTypeLevelValue(
+data class TypeConstructor(
     val parameters: List<TypeLevelParameter>,
-    val value: TypeLevelValue
+    val genericType: Type
 ): TypeLevelValue {
     override val shortDescription: String
     // TODO: should be something like (T, U) => Shape[T, U]
@@ -807,8 +807,8 @@ fun validateTypeLevelValue(value: TypeLevelValue): ValidateTypeResult {
             return ValidateTypeResult.success
         }
 
-        override fun visit(value: ParameterizedTypeLevelValue): ValidateTypeResult {
-            return validateTypeLevelValue(value.value)
+        override fun visit(value: TypeConstructor): ValidateTypeResult {
+            return validateTypeLevelValue(value.genericType)
         }
 
         override fun visit(type: Type): ValidateTypeResult {
@@ -889,7 +889,7 @@ fun validateType(type: Type): ValidateTypeResult {
 }
 
 fun applyTypeLevel(
-    receiver: ParameterizedTypeLevelValue,
+    receiver: TypeConstructor,
     arguments: List<TypeLevelValue>,
     source: Source = NullSource
 ): TypeLevelValue {
@@ -901,7 +901,7 @@ fun applyTypeLevel(
     }
 
     val bindings = receiver.parameters.zip(arguments).toMap()
-    return replaceTypeLevelValues(receiver.value, bindings = bindings)
+    return replaceTypeLevelValues(receiver.genericType, bindings = bindings)
 }
 
 typealias TypeLevelBindings = Map<TypeLevelParameter, TypeLevelValue>
@@ -912,7 +912,7 @@ private fun replaceTypeLevelValues(value: TypeLevelValue, bindings: TypeLevelBin
             return replaceEffects(effect, bindings)
         }
 
-        override fun visit(value: ParameterizedTypeLevelValue): TypeLevelValue {
+        override fun visit(value: TypeConstructor): TypeLevelValue {
             throw UnsupportedOperationException("not implemented")
         }
 
@@ -982,8 +982,8 @@ fun findDiscriminator(sourceType: Type, targetType: TypeLevelValue): Discriminat
         if (!canCoerce(from = refinedType, to = targetType)) {
             return null
         }
-    } else if (targetType is ParameterizedTypeLevelValue) {
-        val targetTypeValue = targetType.value
+    } else if (targetType is TypeConstructor) {
+        val targetTypeValue = targetType.genericType
         if (targetTypeValue !is Type || !canCoerce(from = refinedType, to = targetTypeValue, freeParameters = targetType.parameters.toSet())) {
             return null
         }

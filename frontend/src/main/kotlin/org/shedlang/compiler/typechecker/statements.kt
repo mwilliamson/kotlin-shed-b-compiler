@@ -1,6 +1,5 @@
 package org.shedlang.compiler.typechecker
 
-import org.shedlang.compiler.InternalCompilerError
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.distinctWith
 import org.shedlang.compiler.nullableToList
@@ -77,7 +76,7 @@ private fun generateShapeType(
     val type = if (node.typeLevelParameters.isEmpty()) {
         shapeType
     } else {
-        ParameterizedTypeLevelValue(typeLevelParameters, shapeType)
+        TypeConstructor(typeLevelParameters, shapeType)
     }
     context.addVariableType(node, TypeLevelValueType(type))
     context.defer({
@@ -236,7 +235,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
         )
         if (type is ShapeType) {
             type
-        } else if (type is ParameterizedTypeLevelValue) {
+        } else if (type is TypeConstructor) {
             applyTypeLevel(type, type.parameters.map { shapeParameter ->
                 // TODO: handle !!
                 typeLevelParameters.find { unionParameter -> unionParameter.name == shapeParameter.name }!!
@@ -255,7 +254,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
     val type = if (node.typeLevelParameters.isEmpty()) {
         unionType
     } else {
-        ParameterizedTypeLevelValue(typeLevelParameters, unionType)
+        TypeConstructor(typeLevelParameters, unionType)
     }
 
     context.addVariableType(node, TypeLevelValueType(type))

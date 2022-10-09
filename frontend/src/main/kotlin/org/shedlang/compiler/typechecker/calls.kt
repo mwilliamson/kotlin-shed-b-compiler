@@ -78,7 +78,7 @@ internal fun tryInferCallType(node: CallNode, receiverType: Type, context: TypeC
 private sealed class CallReceiverAnalysis {
     class Function(val receiverType: FunctionType): CallReceiverAnalysis()
     class Constructor(
-        val typeFunction: ParameterizedTypeLevelValue?,
+        val typeFunction: TypeConstructor?,
         val shapeType: ShapeType,
     ): CallReceiverAnalysis() {
         fun receiverType(): FunctionType {
@@ -102,8 +102,8 @@ private fun analyseCallReceiver(receiverType: Type): CallReceiverAnalysis {
         val receiverInnerType = receiverType.value
         if (receiverInnerType is ShapeType) {
             return CallReceiverAnalysis.Constructor(typeFunction = null, shapeType = receiverInnerType)
-        } else if (receiverInnerType is ParameterizedTypeLevelValue) {
-            val typeFunctionInnerType = receiverInnerType.value
+        } else if (receiverInnerType is TypeConstructor) {
+            val typeFunctionInnerType = receiverInnerType.genericType
             if (typeFunctionInnerType is ShapeType) {
                 return CallReceiverAnalysis.Constructor(typeFunction = receiverInnerType, shapeType = typeFunctionInnerType)
             }
@@ -466,5 +466,5 @@ internal fun inferTypeLevelCallType(call: TypeLevelCallNode, context: TypeContex
     val receiverType = inferType(call.receiver, context)
     val arguments = call.arguments.map { argument -> evalTypeLevelValue(argument, context) }
     // TODO: handle error cases
-    return TypeLevelValueType(applyTypeLevel((receiverType as TypeLevelValueType).value as ParameterizedTypeLevelValue, arguments))
+    return TypeLevelValueType(applyTypeLevel((receiverType as TypeLevelValueType).value as TypeConstructor, arguments))
 }

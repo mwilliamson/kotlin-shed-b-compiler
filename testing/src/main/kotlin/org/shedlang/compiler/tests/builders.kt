@@ -614,8 +614,8 @@ fun parametrizedShapeType(
     parameters: List<TypeParameter>,
     tagValue: TagValue? = null,
     fields: List<Field> = listOf()
-) = ParameterizedTypeLevelValue(
-    value = shapeType(
+) = TypeConstructor(
+    genericType = shapeType(
         name = name,
         tagValue = tagValue,
         fields = fields,
@@ -652,8 +652,8 @@ fun parametrizedUnionType(
     tag: Tag = tag(name = name),
     parameters: List<TypeParameter> = listOf(invariantTypeParameter("T")),
     members: List<ShapeType> = listOf()
-) = ParameterizedTypeLevelValue(
-    value = LazyUnionType(
+) = TypeConstructor(
+    genericType = LazyUnionType(
         name = Identifier(name),
         tag = tag,
         getMembers = lazy { members },

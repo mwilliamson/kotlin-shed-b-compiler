@@ -6,7 +6,7 @@ interface TypeLevelValue {
 
     interface Visitor<T> {
         fun visit(effect: Effect): T
-        fun visit(value: ParameterizedTypeLevelValue): T
+        fun visit(value: TypeConstructor): T
         fun visit(type: Type): T
         fun visit(value: CastableTypeLevelFunction): T
         fun visit(value: MetaTypeTypeLevelFunction): T

@@ -552,7 +552,7 @@ private fun evalTypeLevel(node: TypeLevelExpressionNode, context: TypeContext): 
 
         override fun visit(node: TypeLevelApplicationNode): Type {
             val receiver = evalTypeLevelValue(node.receiver, context)
-            if (receiver is ParameterizedTypeLevelValue) {
+            if (receiver is TypeConstructor) {
                 val arguments = node.arguments.map({ argument -> evalTypeLevelValue(argument, context) })
                 // TODO: check parameters and arguments match (size)
                 return TypeLevelValueType(applyTypeLevel(receiver, arguments, source = node.operatorSource))
