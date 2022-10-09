@@ -1053,7 +1053,7 @@ fun findDiscriminator(sourceType: Type, targetType: TypeLevelValue): Discriminat
     }
 
     val matchingMembers = sourceType.members.filter { member ->
-        tagValue(member) == tagValue
+        member.tagValue == tagValue
     }
     val refinedType = unionAll(matchingMembers)
 
