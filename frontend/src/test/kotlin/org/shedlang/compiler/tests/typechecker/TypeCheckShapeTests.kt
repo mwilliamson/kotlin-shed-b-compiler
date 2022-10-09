@@ -194,7 +194,7 @@ class TypeCheckShapeTests {
         val metaType = typeContext.typeOf(node)
         assertThat(metaType, isMetaType(isShapeType()))
         val type = metaTypeToType(metaType)
-        return (type as ShapeType).fields.values.single()
+        return (type as SimpleShapeType).fields.values.single()
     }
 
     @Test

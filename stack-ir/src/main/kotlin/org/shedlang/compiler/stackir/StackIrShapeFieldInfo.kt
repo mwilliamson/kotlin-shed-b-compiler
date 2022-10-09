@@ -3,7 +3,6 @@ package org.shedlang.compiler.stackir
 import kotlinx.collections.immutable.persistentListOf
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.freshNodeId
-import org.shedlang.compiler.types.ShapeType
 import org.shedlang.compiler.types.Type
 
 fun defineShapeFieldGet(shapeType: Type, fieldName: Identifier): DefineFunction {

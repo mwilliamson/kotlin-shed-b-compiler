@@ -9,9 +9,8 @@ import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasi
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.stackir.*
-import org.shedlang.compiler.types.ShapeType
+import org.shedlang.compiler.types.SimpleShapeType
 import org.shedlang.compiler.types.TagValue
-import org.shedlang.compiler.types.TypeRegistry
 import java.lang.UnsupportedOperationException
 
 // TODO: Int implementation should be big integers, not i32
@@ -222,7 +221,7 @@ internal class WasmCompiler(
 
             is FieldUpdate -> {
                 return WasmObjects.compileFieldUpdate(
-                    objectType = instruction.receiverType as ShapeType,
+                    objectType = instruction.receiverType as SimpleShapeType,
                     fieldName = instruction.fieldName,
                     context = context,
                 )

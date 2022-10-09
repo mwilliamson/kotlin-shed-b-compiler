@@ -13,7 +13,7 @@ import org.shedlang.compiler.types.*
 
 internal class WasmShapes(private val typeRegistry: TypeRegistry) {
     internal fun compileDefineShape(
-        shapeType: ShapeType,
+        shapeType: SimpleShapeType,
         metaType: TypeLevelValueType,
         context: WasmFunctionContext
     ): WasmFunctionContext {
@@ -31,7 +31,7 @@ internal class WasmShapes(private val typeRegistry: TypeRegistry) {
 
 private class WasmShapeCompiler(
     private val typeRegistry: TypeRegistry,
-    private val shapeType: ShapeType,
+    private val shapeType: SimpleShapeType,
     private val metaType: TypeLevelValueType,
     private val metaTypeLayout: WasmObjects.ShapeTypeLayout,
     private val metaTypePointer: WasmLocalRef,
@@ -121,7 +121,7 @@ private class WasmShapeCompiler(
     }
 
     private fun compileCreateFieldsObject(context: WasmFunctionContext): Pair<WasmFunctionContext, WasmLocalRef> {
-        val fieldsType = typeRegistry.fieldType(metaType, Identifier("fields")) as ShapeType
+        val fieldsType = typeRegistry.fieldType(metaType, Identifier("fields")) as SimpleShapeType
         val fieldsObjectLayout = WasmObjects.shapeLayout(fieldsType)
         val (context2, fieldsObjectPointer) = malloc("fields", fieldsObjectLayout, context)
 
@@ -129,7 +129,7 @@ private class WasmShapeCompiler(
             val fieldType = stripGenerics(typeRegistry.fieldType(fieldsType, field.name)!!)
             val (currentContext2, fieldObjectPointer) = compileCreateFieldObject(
                 field = field,
-                fieldObjectLayout = WasmObjects.shapeLayout(fieldType as ShapeType),
+                fieldObjectLayout = WasmObjects.shapeLayout(fieldType as SimpleShapeType),
                 context = currentContext
             )
             compileStoreFieldObject(

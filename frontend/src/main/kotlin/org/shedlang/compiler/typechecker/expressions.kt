@@ -254,7 +254,7 @@ private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type 
         union(acc, branchType, source = branchSource)
     }
 
-    val unhandledMembers = unionMembers(expressionType).filter { member ->
+    val unhandledMembers = expressionType.members.filter { member ->
         caseTypes.all { caseType -> !isEquivalentType(caseType, member) }
     }
 
@@ -276,9 +276,9 @@ private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type 
     return type
 }
 
-private fun checkTypeConditionOperand(expression: ExpressionNode, context: TypeContext): Type {
+private fun checkTypeConditionOperand(expression: ExpressionNode, context: TypeContext): UnionType {
     val expressionType = inferType(expression, context)
-    if (stripGenerics(expressionType) is UnionType) {
+    if (expressionType is UnionType) {
         return expressionType
     } else {
         throw UnexpectedTypeError(

@@ -147,31 +147,16 @@ class TypeConstraintSolver(
             return discriminator != null
         }
 
-        // TODO: deal with type parameters
         if (from is UnionType) {
             return from.members.all({ member ->
                 coerce(from = member, to = to)
             })
         }
 
-        // TODO: test constructed union types
-        // TODO: remove duplication of handling unions and constructed unions
-        if (from is ConstructedType && from.constructor.genericType is UnionType) {
-            return from.unionMembers().all { member ->
-                coerce(from = member, to = to)
-            }
-        }
-
         if (to is UnionType) {
             // TODO: coerce mutates state, but we probably want to ignore changes
             // from failed attempts to coerce to a member
             return to.members.any({ member -> coerce(from = from, to = member) })
-        }
-
-        if (to is ConstructedType && to.constructor.genericType is UnionType) {
-            return to.unionMembers().any { member ->
-                coerce(from = from, to = member)
-            }
         }
 
         if (from is FunctionType && to is FunctionType) {
@@ -205,16 +190,11 @@ class TypeConstraintSolver(
                 }
         }
 
-        if (from is ShapeType && to is ShapeType) {
+        if (from is SimpleShapeType && to is SimpleShapeType) {
             return from.shapeId == to.shapeId
         }
 
-        if (
-            from is ConstructedType &&
-            from.constructor.genericType is ShapeType &&
-            to is ConstructedType &&
-            to.constructor.genericType is ShapeType
-        ) {
+        if (from is ConstructedShapeType && to is ConstructedShapeType) {
             if (from.shapeId != to.shapeId) {
                 return false
             }

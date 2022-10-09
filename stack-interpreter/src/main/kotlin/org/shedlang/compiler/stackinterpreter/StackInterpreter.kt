@@ -819,7 +819,7 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
 
         is ObjectCreate -> {
             initialState.pushTemporary(InterpreterShapeValue(
-                tagValue = (objectType as ShapeType).tagValue,
+                tagValue = (objectType as SimpleShapeType).tagValue,
                 fields = mapOf(),
             )).nextInstruction()
         }

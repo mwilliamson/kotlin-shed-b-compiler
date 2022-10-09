@@ -69,8 +69,8 @@ class DefineShape(
     val shapeType: TypeLevelValue
         get() = metaType.value
 
-    val rawShapeType: ShapeType
-        get() = rawValue(shapeType) as ShapeType
+    val rawShapeType: SimpleShapeType
+        get() = rawValue(shapeType) as SimpleShapeType
 
     val fields: Collection<Field>
         get() = rawShapeType.fields.values

@@ -3,7 +3,6 @@ package org.shedlang.compiler.backends
 import org.shedlang.compiler.ast.ExpressionNode
 import org.shedlang.compiler.ast.FieldArgumentNode
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.types.ShapeType
 import org.shedlang.compiler.types.Type
 
 fun fieldArgumentsToFieldsProvided(

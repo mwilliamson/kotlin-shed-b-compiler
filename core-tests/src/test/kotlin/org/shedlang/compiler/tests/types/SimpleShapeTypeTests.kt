@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.shapeType
 
-class ShapeTypeTests {
+class SimpleShapeTypeTests {
     @Test
     fun shortDescriptionOfSimpleShapeIsNameOfShape() {
         val type = shapeType(name = "Shape")

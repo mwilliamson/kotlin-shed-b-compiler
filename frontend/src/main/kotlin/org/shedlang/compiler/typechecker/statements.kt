@@ -97,7 +97,7 @@ private fun generateFields(
     return lazy {
         val parentFields = node.extends.flatMap { extendNode ->
             val superType = evalType(extendNode, context)
-            if (superType is ShapeType) {
+            if (superType is SimpleShapeType) {
                 superType.fields.values.map { field ->
                     FieldDefinition(field, superType.name, extendNode.source)
                 }
@@ -125,7 +125,7 @@ private fun generateField(field: ShapeFieldNode, context: TypeContext, shapeId: 
         shapeId
     } else {
         val fieldShapeType = evalType(fieldShapeExpression, context)
-        if (fieldShapeType is ShapeType) {
+        if (fieldShapeType is SimpleShapeType) {
             fieldShapeType.shapeId
         } else {
             // TODO: throw a better error
@@ -231,7 +231,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
             context,
             tagValue = tagValue
         )
-        if (type is ShapeType) {
+        if (type is SimpleShapeType) {
             type
         } else if (type is TypeConstructor) {
             applyTypeLevel(type, type.parameters.map { shapeParameter ->
@@ -243,7 +243,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
         }
     }
 
-    val unionType = LazyUnionType(
+    val unionType = LazySimpleUnionType(
         name = node.name,
         tag = tag,
         getMembers = lazy { memberTypes },

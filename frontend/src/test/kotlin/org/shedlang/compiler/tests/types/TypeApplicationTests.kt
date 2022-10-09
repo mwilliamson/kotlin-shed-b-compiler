@@ -107,14 +107,13 @@ class TypeApplicationTests {
             members = listOf(applyTypeLevel(shapeType, listOf(unionTypeParameter)))
         )
 
-        val result = applyTypeLevel(union, listOf(BoolType)) as ConstructedType
+        val result = applyTypeLevel(union, listOf(BoolType))
 
-        assertThat(
-            result.unionMembers(),
-            isSequence(
+        assertThat(result, isUnionType(
+            members = isSequence(
                 isEquivalentType(applyTypeLevel(shapeType, listOf(BoolType)) as Type)
             )
-        )
+        ))
     }
 
     @Nested

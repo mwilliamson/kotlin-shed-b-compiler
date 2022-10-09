@@ -106,11 +106,11 @@ private fun analyseCallReceiver(receiverType: Type): CallReceiverAnalysis {
         return CallReceiverAnalysis.Function(receiverType = receiverType)
     } else if (receiverType is TypeLevelValueType) {
         val receiverInnerType = receiverType.value
-        if (receiverInnerType is ShapeType) {
+        if (receiverInnerType is SimpleShapeType) {
             return CallReceiverAnalysis.Constructor(typeFunction = null, shapeType = receiverInnerType)
         } else if (receiverInnerType is TypeConstructor) {
             val typeFunctionInnerType = receiverInnerType.genericType
-            if (typeFunctionInnerType is ShapeType) {
+            if (typeFunctionInnerType is SimpleShapeType) {
                 return CallReceiverAnalysis.Constructor(
                     typeFunction = receiverInnerType,
                     shapeType = applyTypeLevel(receiverInnerType, receiverInnerType.parameters)

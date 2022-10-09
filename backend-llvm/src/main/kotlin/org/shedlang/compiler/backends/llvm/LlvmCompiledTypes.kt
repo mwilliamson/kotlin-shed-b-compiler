@@ -65,8 +65,8 @@ internal fun compiledType(objectType: TypeLevelValue): CompiledType {
     if (objectType is TypeAlias) {
         // TODO: better handling of type aliases
         return compiledType(objectType.aliasedType)
-    } else if (objectType is TypeLevelValueType && rawValue(objectType.value) is ShapeType) {
-        val shapeType = rawValue(objectType.value) as ShapeType
+    } else if (objectType is TypeLevelValueType && rawValue(objectType.value) is SimpleShapeType) {
+        val shapeType = rawValue(objectType.value) as SimpleShapeType
         return CompiledShapeType(
             parameterTypes = shapeType.fields.map { compiledValueType },
             compiledObjectType = CompiledObjectType(
@@ -95,9 +95,6 @@ internal fun compiledType(objectType: TypeLevelValue): CompiledType {
                     fieldTypes = objectType.fields.map { field -> field.key to field.value.type },
                     tagValue = objectType.tagValue
                 )
-
-            is ConstructedType ->
-                compiledType(objectType.constructor.genericType)
 
             is TypeConstructor ->
                 compiledType(objectType.genericType)
