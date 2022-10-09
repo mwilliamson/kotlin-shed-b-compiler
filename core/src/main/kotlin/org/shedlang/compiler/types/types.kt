@@ -310,7 +310,7 @@ data class TypeParameter(
         }
 
     override fun replaceValues(bindings: TypeLevelBindings): Type {
-        return bindings.getOrElse(this, { this }) as Type
+        return bindings.getOrDefault(this, this) as Type
     }
 
     override fun <T> accept(visitor: TypeLevelParameter.Visitor<T>): T {
