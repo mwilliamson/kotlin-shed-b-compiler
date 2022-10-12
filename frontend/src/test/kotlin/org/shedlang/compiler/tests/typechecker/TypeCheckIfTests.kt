@@ -6,7 +6,7 @@ import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.inferType
-import org.shedlang.compiler.typechecker.typeCheck
+import org.shedlang.compiler.typechecker.typeCheckExpression
 import org.shedlang.compiler.types.BoolType
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.metaType
@@ -16,14 +16,14 @@ class TypeCheckIfTests {
     fun whenConditionIsNotBooleanThenIfExpressionDoesNotTypeCheck() {
         val statement = ifExpression(condition = literalInt(1))
         assertThat(
-            { typeCheck(statement, emptyTypeContext()) },
+            { typeCheckExpression(statement, emptyTypeContext()) },
             throwsUnexpectedType(expected = BoolType, actual = IntType)
         )
     }
 
     @Test
     fun conditionalBranchIsTypeChecked() {
-        assertStatementIsTypeChecked { badStatement -> typeCheck(
+        assertStatementIsTypeChecked { badStatement -> typeCheckExpression(
             ifExpression(trueBranch = listOf(badStatement)),
             typeContext()
         ) }
@@ -31,7 +31,7 @@ class TypeCheckIfTests {
 
     @Test
     fun elseBranchIsTypeChecked() {
-        assertStatementIsTypeChecked { badStatement -> typeCheck(
+        assertStatementIsTypeChecked { badStatement -> typeCheckExpression(
             ifExpression(elseBranch = listOf(badStatement)),
             typeContext()
         ) }

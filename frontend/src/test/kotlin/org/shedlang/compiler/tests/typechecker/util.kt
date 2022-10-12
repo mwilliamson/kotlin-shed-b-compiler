@@ -4,7 +4,7 @@ import org.shedlang.compiler.TypesMap
 import org.shedlang.compiler.ast.ExpressionNode
 import org.shedlang.compiler.ast.ReferenceNode
 import org.shedlang.compiler.ast.VariableBindingNode
-import org.shedlang.compiler.typechecker.typeCheck
+import org.shedlang.compiler.typechecker.typeCheckExpression
 import org.shedlang.compiler.types.Type
 
 internal fun captureTypes(
@@ -21,7 +21,7 @@ internal fun captureTypes(
         types = types
     )
 
-    typeCheck(expression, typeContext)
+    typeCheckExpression(expression, typeContext)
     typeContext.undefer()
 
     return TypesMap(

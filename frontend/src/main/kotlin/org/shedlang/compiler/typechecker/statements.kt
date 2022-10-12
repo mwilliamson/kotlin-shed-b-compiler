@@ -11,9 +11,9 @@ internal fun typeCheckModuleStatement(statement: ModuleStatementNode, context: T
         override fun visit(node: EffectDefinitionNode) = typeCheckEffectDefinition(node, context)
         override fun visit(node: TypeAliasNode) = typeCheckTypeAlias(node, context)
         override fun visit(node: ShapeNode) = typeCheckShapeDefinition(node, context)
-        override fun visit(node: UnionNode) = typeCheck(node, context)
+        override fun visit(node: UnionNode) = typeCheckUnion(node, context)
         override fun visit(node: FunctionDefinitionNode) = typeCheckFunctionDefinition(node, context)
-        override fun visit(node: ValNode) = typeCheck(node, context)
+        override fun visit(node: ValNode) = typeCheckVal(node, context)
         override fun visit(node: VarargsDeclarationNode) = typeCheckVarargsDeclaration(node, context)
     })
 }
@@ -206,7 +206,7 @@ private fun mergeField(name: Identifier, parentFields: List<FieldDefinition>, ne
     }
 }
 
-private fun typeCheck(node: UnionNode, context: TypeContext) {
+private fun typeCheckUnion(node: UnionNode, context: TypeContext) {
     // TODO: check for duplicates in members
     // TODO: check for circularity
     // TODO: test laziness
@@ -309,7 +309,7 @@ internal fun typeCheckFunctionStatement(statement: FunctionStatementNode, contex
         }
 
         override fun visit(node: ValNode): Type {
-            typeCheck(node, context)
+            typeCheckVal(node, context)
             return UnitType
         }
 
@@ -359,7 +359,7 @@ private fun typeCheckResume(node: ResumeNode, context: TypeContext): NothingType
     return NothingType
 }
 
-private fun typeCheck(node: ValNode, context: TypeContext) {
+private fun typeCheckVal(node: ValNode, context: TypeContext) {
     val type = inferType(node.expression, context)
     val target = node.target
 

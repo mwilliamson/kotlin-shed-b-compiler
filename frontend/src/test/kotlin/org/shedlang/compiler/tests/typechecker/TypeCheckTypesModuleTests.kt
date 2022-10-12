@@ -4,7 +4,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.typeCheck
+import org.shedlang.compiler.typechecker.typeCheckTypesModule
 import org.shedlang.compiler.types.IntMetaType
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.MetaTypeGroup
@@ -21,7 +21,7 @@ class TypeCheckTypesModuleTests {
 
         assertThat(
             {
-                typeCheck(moduleName(), node, typeContext)
+                typeCheckTypesModule(moduleName(), node, typeContext)
             },
             throwsUnexpectedType(expected = MetaTypeGroup, actual = IntType)
         )
@@ -36,7 +36,7 @@ class TypeCheckTypesModuleTests {
             )
         )
 
-        val result = typeCheck(moduleName(), node, typeContext(
+        val result = typeCheckTypesModule(moduleName(), node, typeContext(
             referenceTypes = mapOf(intReference to IntMetaType)
         ))
         assertThat(result.fields, isMap(

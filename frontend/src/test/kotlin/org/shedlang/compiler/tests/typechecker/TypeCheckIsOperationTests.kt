@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.CouldNotFindDiscriminator
 import org.shedlang.compiler.typechecker.inferType
-import org.shedlang.compiler.typechecker.typeCheck
+import org.shedlang.compiler.typechecker.typeCheckExpression
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.metaType
 
@@ -19,7 +19,7 @@ class TypeCheckIsOperationTests {
         val expression = isOperation(expression = literalInt(1), type = memberReference)
         val typeContext = typeContext(referenceTypes = mapOf(memberReference to metaType(memberType)))
         assertThat(
-            { typeCheck(expression, typeContext) },
+            { typeCheckExpression(expression, typeContext) },
             throwsUnexpectedType(expected = isUnionTypeGroup, actual = IntType)
         )
     }
@@ -39,7 +39,7 @@ class TypeCheckIsOperationTests {
             )
         )
         assertThat(
-            { typeCheck(expression, typeContext) },
+            { typeCheckExpression(expression, typeContext) },
             throws(allOf(
                 has(CouldNotFindDiscriminator::sourceType, isType(unionType)),
                 has(CouldNotFindDiscriminator::targetType, cast(isType(memberType)))

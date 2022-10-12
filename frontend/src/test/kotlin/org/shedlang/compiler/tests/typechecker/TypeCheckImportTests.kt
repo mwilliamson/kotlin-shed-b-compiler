@@ -12,7 +12,7 @@ import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ModuleNotFoundError
 import org.shedlang.compiler.typechecker.MultipleModulesWithSameNameFoundError
-import org.shedlang.compiler.typechecker.typeCheck
+import org.shedlang.compiler.typechecker.typeCheckImport
 
 class TypeCheckImportTests {
     @Test
@@ -32,7 +32,7 @@ class TypeCheckImportTests {
                 ))
             )
         )
-        typeCheck(node, typeContext)
+        typeCheckImport(node, typeContext)
         assertThat(typeContext.typeOf(target), cast(equalTo(moduleType)))
     }
 
@@ -43,7 +43,7 @@ class TypeCheckImportTests {
         val typeContext = typeContext(modules = mapOf(path to ModuleResult.NotFound(name = identifiers("Lib", "Messages"))))
 
         assertThat(
-            { typeCheck(node, typeContext) },
+            { typeCheckImport(node, typeContext) },
             throwsException(has(ModuleNotFoundError::name, isSequence(isIdentifier("Lib"), isIdentifier("Messages"))))
         )
     }
@@ -55,7 +55,7 @@ class TypeCheckImportTests {
         val typeContext = typeContext(modules = mapOf(path to ModuleResult.FoundMany(name = identifiers("Lib", "Messages"))))
 
         assertThat(
-            { typeCheck(node, typeContext) },
+            { typeCheckImport(node, typeContext) },
             throwsException(has(MultipleModulesWithSameNameFoundError::name, isSequence(isIdentifier("Lib"), isIdentifier("Messages"))))
         )
     }

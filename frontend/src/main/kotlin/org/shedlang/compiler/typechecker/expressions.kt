@@ -7,7 +7,7 @@ import org.shedlang.compiler.types.*
 private data class UnaryOperationType(val operator: UnaryOperator, val operand: Type)
 private data class BinaryOperationType(val operator: BinaryOperator, val left: Type, val right: Type)
 
-internal fun typeCheck(expression: ExpressionNode, context: TypeContext): Unit {
+internal fun typeCheckExpression(expression: ExpressionNode, context: TypeContext): Unit {
     inferType(expression, context)
 }
 

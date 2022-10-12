@@ -256,7 +256,7 @@ internal fun typeCheck(
         resolvedReferences = resolvedReferences,
         typeRegistry = typeRegistry,
         getModule = getModule,
-        typeCheck = { context -> typeCheck(moduleName, module, context)}
+        typeCheck = { context -> typeCheckModule(moduleName, module, context)}
     )
 }
 
@@ -274,7 +274,7 @@ internal fun typeCheck(
         resolvedReferences = resolvedReferences,
         typeRegistry = typeRegistry,
         getModule = getModule,
-        typeCheck = { context -> typeCheck(moduleName, module, context)}
+        typeCheck = { context -> typeCheckTypesModule(moduleName, module, context)}
     )
 }
 
@@ -302,9 +302,9 @@ private fun typeCheckModule(
     )
 }
 
-internal fun typeCheck(moduleName: ModuleName, module: ModuleNode, context: TypeContext): ModuleType {
+internal fun typeCheckModule(moduleName: ModuleName, module: ModuleNode, context: TypeContext): ModuleType {
     for (import in module.imports) {
-        typeCheck(import, context)
+        typeCheckImport(import, context)
     }
 
     val (typeDeclarations, otherStatements) = module.body
@@ -330,9 +330,9 @@ internal fun typeCheck(moduleName: ModuleName, module: ModuleNode, context: Type
     return ModuleType(name = moduleName, fields = fields.associateBy { field -> field.name })
 }
 
-internal fun typeCheck(moduleName: ModuleName, module: TypesModuleNode, context: TypeContext): ModuleType {
+internal fun typeCheckTypesModule(moduleName: ModuleName, module: TypesModuleNode, context: TypeContext): ModuleType {
     for (import in module.imports) {
-        typeCheck(import, context)
+        typeCheckImport(import, context)
     }
 
     for (statement in module.body) {
@@ -350,7 +350,7 @@ internal fun typeCheck(moduleName: ModuleName, module: TypesModuleNode, context:
     return ModuleType(name = moduleName, fields = fields.associateBy { field -> field.name })
 }
 
-internal fun typeCheck(import: ImportNode, context: TypeContext) {
+internal fun typeCheckImport(import: ImportNode, context: TypeContext) {
     val type = findModule(import.path, context, source = import.source)
     typeCheckTarget(import.target, type, context)
 }
@@ -501,15 +501,6 @@ private fun evalFunctionDefinitionEffect(node: FunctionEffectNode?, context: Typ
         null ->
             evalEffect(node, context)
     }
-}
-
-private fun evalEffects(effectNodes: List<TypeLevelExpressionNode>, context: TypeContext): Effect {
-    val effects = effectNodes.map { effect -> evalEffect(effect, context) }
-    return effectUnion(effects)
-}
-
-private fun typeCheck(type: TypeLevelExpressionNode, context: TypeContext) {
-    evalType(type, context)
 }
 
 internal fun evalType(type: TypeLevelExpressionNode, context: TypeContext): Type {

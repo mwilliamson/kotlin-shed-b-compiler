@@ -28,7 +28,7 @@ class TypeCheckWhenTests {
     fun expressionMustBeUnion() {
         val expression = whenExpression(expression = literalInt(1))
         assertThat(
-            { typeCheck(expression, typeContext()) },
+            { typeCheckExpression(expression, typeContext()) },
             throwsUnexpectedType(expected = isUnionTypeGroup, actual = IntType)
         )
     }
@@ -53,7 +53,7 @@ class TypeCheckWhenTests {
             )
         )
         assertThat(
-            { typeCheck(expression, typeContext) },
+            { typeCheckExpression(expression, typeContext) },
             throws(allOf(
                 has(CouldNotFindDiscriminator::sourceType, isType(unionType)),
                 has(CouldNotFindDiscriminator::targetType, cast(isType(memberType)))
@@ -220,7 +220,7 @@ class TypeCheckWhenTests {
         )
 
         assertThat(
-            { typeCheck(statement, typeContext) },
+            { typeCheckExpression(statement, typeContext) },
             throws<WhenIsNotExhaustiveError>(has(
                 WhenIsNotExhaustiveError::unhandledMembers,
                 isSequence(isType(inputMember2))
@@ -255,7 +255,7 @@ class TypeCheckWhenTests {
         )
 
         assertThat(
-            { typeCheck(expression, typeContext) },
+            { typeCheckExpression(expression, typeContext) },
             throws<WhenElseIsNotReachableError>()
         )
     }

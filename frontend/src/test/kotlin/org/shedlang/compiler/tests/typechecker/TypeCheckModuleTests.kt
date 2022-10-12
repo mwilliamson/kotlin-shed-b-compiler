@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.FunctionStatementNode
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.typeCheck
+import org.shedlang.compiler.typechecker.typeCheckModule
 import org.shedlang.compiler.types.UnitMetaType
 import org.shedlang.compiler.types.UnitType
 
@@ -20,7 +20,7 @@ class TypeCheckModuleTests {
             ))
 
             val typeContext = typeContext(referenceTypes = mapOf(unit to UnitMetaType))
-            typeCheck(moduleName(), node, typeContext)
+            typeCheckModule(moduleName(), node, typeContext)
         })
     }
 
@@ -40,7 +40,7 @@ class TypeCheckModuleTests {
             declarationG
         ))
 
-        typeCheck(moduleName(), node, typeContext(
+        typeCheckModule(moduleName(), node, typeContext(
             referenceTypes = mapOf(unit to UnitMetaType),
             references = mapOf(
                 referenceF to declarationF,
@@ -63,7 +63,7 @@ class TypeCheckModuleTests {
             shape
         ))
 
-        typeCheck(moduleName(), node, typeContext(
+        typeCheckModule(moduleName(), node, typeContext(
             references = mapOf(
                 shapeReference to shape
             ),
@@ -81,7 +81,7 @@ class TypeCheckModuleTests {
             secondShape
         ))
 
-        typeCheck(moduleName(), node, typeContext(
+        typeCheckModule(moduleName(), node, typeContext(
             references = mapOf(
                 firstShapeReference to firstShape
             )
@@ -108,7 +108,7 @@ class TypeCheckModuleTests {
             )
         )
 
-        val result = typeCheck(moduleName(), node, typeContext(
+        val result = typeCheckModule(moduleName(), node, typeContext(
             references = mapOf(export to exportedFunction),
             referenceTypes = mapOf(unitReference to UnitMetaType)
         ))
