@@ -15,7 +15,7 @@ class TypeCheckTypeAliasTests {
         val typeContext = typeContext(referenceTypes = mapOf(
             intType to IntMetaType
         ))
-        typeCheckModuleStatement(node, typeContext)
+        typeCheckModuleStatementAllPhases(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isTypeAlias(
             name = isIdentifier("Size"),
             aliasedType = isIntType

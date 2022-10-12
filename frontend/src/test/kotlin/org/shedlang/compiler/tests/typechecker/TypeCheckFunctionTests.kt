@@ -3,6 +3,7 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.FunctionDefinitionNode
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.Source
 import org.shedlang.compiler.tests.throwsException
@@ -566,7 +567,7 @@ class TypeCheckFunctionTests {
             referenceTypes = mapOf(unitReference to UnitMetaType)
         )
 
-        typeCheckModuleStatement(node, typeContext)
+        typeCheckModuleStatementAllPhases(node, typeContext)
         typeContext.undefer()
         assertThat(
             typeContext.typeOf(node),
@@ -595,5 +596,9 @@ class TypeCheckFunctionTests {
             typeContext.toTypes().functionType(node),
             isFunctionType()
         )
+    }
+
+    private fun typeCheckFunctionDefinition(node: FunctionDefinitionNode, context: TypeContext) {
+        typeCheckModuleStatementAllPhases(node, context)
     }
 }

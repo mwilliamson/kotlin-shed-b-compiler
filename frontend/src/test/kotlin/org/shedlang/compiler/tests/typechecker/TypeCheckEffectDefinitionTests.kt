@@ -19,7 +19,7 @@ class TypeCheckEffectDefinitionTests {
         )
 
         val typeContext = typeContext()
-        typeCheckModuleStatement(effectDefinition, typeContext)
+        typeCheckModuleStatementAllPhases(effectDefinition, typeContext)
 
         assertThat(typeContext.typeOf(effectDefinition), isEffectType(isUserDefinedEffect(
             name = isIdentifier("Try"),
@@ -64,7 +64,7 @@ class TypeCheckEffectDefinitionTests {
                 nothingReference to metaType(NothingType)
             )
         )
-        typeCheckModuleStatement(effectDefinition, typeContext)
+        typeCheckModuleStatementAllPhases(effectDefinition, typeContext)
 
         assertThat(typeContext.typeOf(effectDefinition), isEffectType(isUserDefinedEffect(
             name = isIdentifier("Try"),

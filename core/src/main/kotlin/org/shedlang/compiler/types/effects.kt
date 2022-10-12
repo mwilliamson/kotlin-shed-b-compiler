@@ -1,6 +1,7 @@
 package org.shedlang.compiler.types
 
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.util.Box
 
 interface Effect: TypeLevelValue {
     override fun <T> accept(visitor: TypeLevelValue.Visitor<T>): T {
@@ -69,9 +70,9 @@ data class OpaqueEffect(
 data class UserDefinedEffect(
     val definitionId: Int,
     val name: Identifier,
-    private val getOperations: Lazy<Map<Identifier, FunctionType>>
+    private val operationsBox: Box<Map<Identifier, FunctionType>>
 ): Effect {
-    val operations: Map<Identifier, FunctionType> by getOperations
+    val operations: Map<Identifier, FunctionType> by operationsBox
 
     override val shortDescription: String
         get() = "!${name.value}"

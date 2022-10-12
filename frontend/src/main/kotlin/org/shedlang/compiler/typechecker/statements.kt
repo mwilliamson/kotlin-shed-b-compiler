@@ -4,115 +4,195 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.distinctWith
 import org.shedlang.compiler.nullableToList
 import org.shedlang.compiler.types.*
+import org.shedlang.compiler.util.Box
 
 
-internal fun typeCheckModuleStatement(statement: ModuleStatementNode, context: TypeContext) {
-    return statement.accept(object : ModuleStatementNode.Visitor<Unit> {
-        override fun visit(node: EffectDefinitionNode) = typeCheckEffectDefinition(node, context)
-        override fun visit(node: TypeAliasNode) = typeCheckTypeAlias(node, context)
-        override fun visit(node: ShapeNode) = typeCheckShapeDefinition(node, context)
-        override fun visit(node: UnionNode) = typeCheckUnion(node, context)
-        override fun visit(node: FunctionDefinitionNode) = typeCheckFunctionDefinition(node, context)
-        override fun visit(node: ValNode) = typeCheckVal(node, context)
-        override fun visit(node: VarargsDeclarationNode) = typeCheckVarargsDeclaration(node, context)
+internal fun typeCheckModuleStatement(statement: ModuleStatementNode): TypeCheckSteps {
+    return statement.accept(object : ModuleStatementNode.Visitor<TypeCheckSteps> {
+        override fun visit(node: EffectDefinitionNode) = typeCheckEffectDefinition(node)
+        override fun visit(node: TypeAliasNode) = typeCheckTypeAlias(node)
+        override fun visit(node: ShapeNode) = typeCheckShapeDefinition(node)
+        override fun visit(node: UnionNode) = typeCheckUnion(node)
+        override fun visit(node: FunctionDefinitionNode) = typeCheckFunctionDefinition(node)
+        override fun visit(node: ValNode) = typeCheckVal(node)
+        override fun visit(node: VarargsDeclarationNode) = typeCheckVarargsDeclaration(node)
     })
 }
 
-private fun typeCheckEffectDefinition(node: EffectDefinitionNode, context: TypeContext) {
-    var effect: UserDefinedEffect? = null
-    effect = UserDefinedEffect(
-        definitionId = node.nodeId,
-        name = node.name,
-        getOperations = lazy {
-            node.operations.map { (operationName, operationTypeNode) ->
-                // TODO: throw appropriate error on wrong type
-                val operationType = evalTypeLevelValue(operationTypeNode, context) as FunctionType
-                operationName to operationType.copy(effect = effectUnion(operationType.effect, effect!!))
-            }.toMap()
-        }
-    )
-    context.addVariableType(node, TypeLevelValueType(effect))
+internal enum class TypeCheckPhase {
+    DEFINE_TYPE_LEVEL_VALUES,
+    DEFINE_FUNCTIONS,
+    GENERATE_TYPE_INFO,
+    TYPE_CHECK_BODIES,
 }
 
-private fun typeCheckTypeAlias(node: TypeAliasNode, context: TypeContext) {
-    // TODO: test laziness
-    val type = LazyTypeAlias(
-        name = node.name,
-        getAliasedType = lazy {
-            evalType(node.expression, context)
+internal class TypeCheckStep(
+    val phase: TypeCheckPhase,
+    val func: (TypeContext) -> Unit
+) {
+    companion object {
+        fun defineTypeLevelValues(func: (TypeContext) -> Unit): TypeCheckStep {
+            return TypeCheckStep(phase = TypeCheckPhase.DEFINE_TYPE_LEVEL_VALUES, func)
         }
-    )
-    context.addVariableType(node, TypeLevelValueType(type))
 
-    context.defer {
-        type.aliasedType
+        fun defineFunctions(func: (TypeContext) -> Unit): TypeCheckStep {
+            return TypeCheckStep(phase = TypeCheckPhase.DEFINE_FUNCTIONS, func)
+        }
+
+        fun generateTypeInfo(func: (TypeContext) -> Unit): TypeCheckStep {
+            return TypeCheckStep(phase = TypeCheckPhase.GENERATE_TYPE_INFO, func)
+        }
+
+        fun typeCheckBodies(func: (TypeContext) -> Unit): TypeCheckStep {
+            return TypeCheckStep(phase = TypeCheckPhase.TYPE_CHECK_BODIES, func)
+        }
     }
 }
 
-private fun typeCheckShapeDefinition(node: ShapeNode, context: TypeContext) {
-    generateShapeType(node, context)
+internal class TypeCheckSteps(private val steps: List<TypeCheckStep>) {
+    fun runAllPhases(context: TypeContext) {
+        for (phase in TypeCheckPhase.values()) {
+            run(phase, context)
+        }
+    }
+
+    fun run(phase: TypeCheckPhase, context: TypeContext) {
+        for (step in steps) {
+            if (step.phase == phase) {
+                step.func(context)
+            }
+        }
+    }
+}
+
+private fun typeCheckEffectDefinition(node: EffectDefinitionNode): TypeCheckSteps {
+    val effectBox = Box.mutable<UserDefinedEffect>()
+    val operationsBox = Box.mutable<Map<Identifier, FunctionType>>()
+
+    return TypeCheckSteps(
+        listOf(
+            TypeCheckStep.defineTypeLevelValues { context ->
+                val effect = UserDefinedEffect(
+                    definitionId = node.nodeId,
+                    name = node.name,
+                    operationsBox = operationsBox
+                )
+                effectBox.set(effect)
+                context.addVariableType(node, TypeLevelValueType(effect))
+            },
+
+            TypeCheckStep.generateTypeInfo { context ->
+                val effect = effectBox.get()
+
+                val operations = node.operations.map { (operationName, operationTypeNode) ->
+                    // TODO: throw appropriate error on wrong type
+                    val operationType = evalTypeLevelValue(operationTypeNode, context) as FunctionType
+                    operationName to operationType.copy(effect = effectUnion(operationType.effect, effect))
+                }.toMap()
+
+                operationsBox.set(operations)
+            }
+        ),
+    )
+}
+
+private fun typeCheckTypeAlias(node: TypeAliasNode): TypeCheckSteps {
+    val aliasedTypeBox = Box.mutable<Type>()
+
+    return TypeCheckSteps(
+        listOf(
+            TypeCheckStep.defineTypeLevelValues { context ->
+                val type = LazyTypeAlias(
+                    name = node.name,
+                    aliasedTypeBox = aliasedTypeBox
+                )
+                context.addVariableType(node, TypeLevelValueType(type))
+            },
+
+            TypeCheckStep.generateTypeInfo { context ->
+                val aliasedType = evalType(node.expression, context)
+                aliasedTypeBox.set(aliasedType)
+            },
+        )
+    )
+}
+
+private fun typeCheckShapeDefinition(node: ShapeNode): TypeCheckSteps {
+    return generateShapeType(node)
 }
 
 private fun generateShapeType(
     node: ShapeBaseNode,
-    context: TypeContext,
-    tagValue: TagValue? = null
-): TypeLevelValue {
-    val typeLevelParameters = typeCheckTypeLevelParameters(node.typeLevelParameters, context)
-
+    tagValueBox: Box<TagValue?> = Box.of(null)
+): TypeCheckSteps {
     val shapeId = freshTypeId()
+    val typeBox = Box.mutable<TypeLevelValue>()
+    val fieldsBox = Box.mutable<List<Field>>()
 
-    // TODO: test laziness
-    val fields = generateFields(node, context, shapeId)
+    return TypeCheckSteps(
+        listOf(
+            TypeCheckStep.defineTypeLevelValues { context ->
+                val tagValue = tagValueBox.get()
 
-    val shapeType = lazyShapeType(
-        shapeId = shapeId,
-        qualifiedName = context.qualifiedNameType(node.name),
-        tagValue = tagValue,
-        getFields = fields,
+                val typeLevelParameters = typeCheckTypeLevelParameters(node.typeLevelParameters, context)
+
+                val shapeType = shapeType(
+                    shapeId = shapeId,
+                    qualifiedName = context.qualifiedNameType(node.name),
+                    tagValue = tagValue,
+                    fieldsBox = fieldsBox,
+                )
+                val type = if (node.typeLevelParameters.isEmpty()) {
+                    shapeType
+                } else {
+                    TypeConstructor(typeLevelParameters, shapeType)
+                }
+                typeBox.set(type)
+                context.addVariableType(node, TypeLevelValueType(type))
+            },
+
+            TypeCheckStep.generateTypeInfo { context ->
+                // TODO: test laziness
+                val fields = generateFields(node, context, shapeId)
+                fieldsBox.set(fields)
+            },
+
+            TypeCheckStep.typeCheckBodies { context ->
+                val type = typeBox.get()
+                checkTypeLevelValue(type, source = node.source)
+            }
+        ),
     )
-    val type = if (node.typeLevelParameters.isEmpty()) {
-        shapeType
-    } else {
-        TypeConstructor(typeLevelParameters, shapeType)
-    }
-    context.addVariableType(node, TypeLevelValueType(type))
-    context.defer({
-        checkTypeLevelValue(type, source = node.source)
-    })
-    return type
 }
 
 private fun generateFields(
     node: ShapeBaseNode,
     context: TypeContext,
     shapeId: Int
-): Lazy<List<Field>> {
+): List<Field> {
     for ((fieldName, fields) in node.fields.groupBy({ field -> field.name })) {
         if (fields.size > 1) {
             throw FieldAlreadyDeclaredError(fieldName = fieldName, source = fields[1].source)
         }
     }
 
-    return lazy {
-        val parentFields = node.extends.flatMap { extendNode ->
-            val superType = evalType(extendNode, context)
-            if (superType is SimpleShapeType) {
-                superType.fields.values.map { field ->
-                    FieldDefinition(field, superType.name, extendNode.source)
-                }
-            } else {
-                // TODO: throw a better exception
-                throw NotImplementedError()
+    val parentFields = node.extends.flatMap { extendNode ->
+        val superType = evalType(extendNode, context)
+        if (superType is SimpleShapeType) {
+            superType.fields.values.map { field ->
+                FieldDefinition(field, superType.name, extendNode.source)
             }
+        } else {
+            // TODO: throw a better exception
+            throw NotImplementedError()
         }
-
-        val explicitFields = node.fields.map { field ->
-            generateField(field, context, shapeId = shapeId, shapeName = node.name)
-        }
-
-        mergeFields(parentFields, explicitFields)
     }
+
+    val explicitFields = node.fields.map { field ->
+        generateField(field, context, shapeId = shapeId, shapeName = node.name)
+    }
+
+    return mergeFields(parentFields, explicitFields)
 }
 
 private data class FieldDefinition(val field: Field, val shape: Identifier, val source: Source)
@@ -206,77 +286,129 @@ private fun mergeField(name: Identifier, parentFields: List<FieldDefinition>, ne
     }
 }
 
-private fun typeCheckUnion(node: UnionNode, context: TypeContext) {
+private fun typeCheckUnion(node: UnionNode): TypeCheckSteps {
     // TODO: check for duplicates in members
     // TODO: check for circularity
     // TODO: test laziness
     // TODO: check members satisfy subtype relation
-    val typeLevelParameters = typeCheckTypeLevelParameters(node.typeLevelParameters, context)
 
-    val superTypeNode = node.superType
-    val superType = if (superTypeNode == null) {
-        null
-    } else {
-        evalType(superTypeNode, context)
-    }
+    val tagBox = Box.mutable<Tag>()
+    val typeLevelParametersBox = Box.mutable<List<TypeLevelParameter>>()
+    val typeBox = Box.mutable<TypeLevelValue>()
+    val membersBox = Box.mutable<List<ShapeType>>()
 
-    // TODO: check members conform to supertype
-
-    val tag = Tag(context.qualifiedNameType(node.name))
-
-    val memberTypes = node.members.map { member ->
-        val tagValue = TagValue(tag, member.name)
-        val type = generateShapeType(
+    val membersSteps = node.members.map { member ->
+        val tagValueBox = tagBox.map { tag -> TagValue(tag, member.name) }
+        generateShapeType(
             member,
-            context,
-            tagValue = tagValue
+            tagValueBox = tagValueBox
         )
-        if (type is SimpleShapeType) {
-            type
-        } else if (type is TypeConstructor) {
-            applyTypeLevel(type, type.parameters.map { shapeParameter ->
-                // TODO: handle !!
-                typeLevelParameters.find { unionParameter -> unionParameter.name == shapeParameter.name }!!
-            }) as ShapeType
-        } else {
-            throw UnsupportedOperationException()
+    }
+
+    return TypeCheckSteps(
+        listOf(
+            TypeCheckStep.defineTypeLevelValues { context ->
+                val typeLevelParameters = typeCheckTypeLevelParameters(node.typeLevelParameters, context)
+                typeLevelParametersBox.set(typeLevelParameters)
+
+                val tag = Tag(context.qualifiedNameType(node.name))
+                tagBox.set(tag)
+
+                val unionType = LazySimpleUnionType(
+                    name = node.name,
+                    tag = tag,
+                    getMembers = lazy { membersBox.get() },
+                )
+
+                val type = if (node.typeLevelParameters.isEmpty()) {
+                    unionType
+                } else {
+                    TypeConstructor(typeLevelParameters, unionType)
+                }
+                typeBox.set(type)
+
+                context.addVariableType(node, TypeLevelValueType(type))
+            },
+
+            TypeCheckStep.generateTypeInfo { context ->
+                val typeLevelParameters = typeLevelParametersBox.get()
+
+                val superTypeNode = node.superType
+                val superType = if (superTypeNode == null) {
+                    null
+                } else {
+                    evalType(superTypeNode, context)
+                }
+
+                val memberTypes = node.members.map { member ->
+                    val type = (context.typeOf(member) as TypeLevelValueType).value
+                    if (type is SimpleShapeType) {
+                        type
+                    } else if (type is TypeConstructor) {
+                        applyTypeLevel(type, type.parameters.map { shapeParameter ->
+                            // TODO: handle !!
+                            typeLevelParameters.find { unionParameter -> unionParameter.name == shapeParameter.name }!!
+                        }) as ShapeType
+                    } else {
+                        throw UnsupportedOperationException()
+                    }
+                }
+                membersBox.set(memberTypes)
+            },
+        ) + TypeCheckPhase.values().map { phase ->
+            TypeCheckStep(phase) { context ->
+                for (memberSteps in membersSteps) {
+                    memberSteps.run(phase, context)
+                }
+            }
         }
-    }
-
-    val unionType = LazySimpleUnionType(
-        name = node.name,
-        tag = tag,
-        getMembers = lazy { memberTypes },
     )
-    val type = if (node.typeLevelParameters.isEmpty()) {
-        unionType
-    } else {
-        TypeConstructor(typeLevelParameters, unionType)
-    }
 
-    context.addVariableType(node, TypeLevelValueType(type))
-    context.defer({
-        // TODO: checkStaticValue for member instead?
-        memberTypes.forEach { memberType -> memberType.fields }
-        checkTypeLevelValue(type, source = node.source)
-    })
+//    val memberTypes = node.members.map { member ->
+//        val tagValue = TagValue(tag, member.name)
+//        val type = generateShapeType(
+//            member,
+//            context,
+//            tagValue = tagValue
+//        )
+//        if (type is SimpleShapeType) {
+//            type
+//        } else if (type is TypeConstructor) {
+//            applyTypeLevel(type, type.parameters.map { shapeParameter ->
+//                // TODO: handle !!
+//                typeLevelParameters.find { unionParameter -> unionParameter.name == shapeParameter.name }!!
+//            }) as ShapeType
+//        } else {
+//            throw UnsupportedOperationException()
+//        }
+//    }
+//
+//    context.defer({
+//        // TODO: checkStaticValue for member instead?
+//        memberTypes.forEach { memberType -> memberType.fields }
+//        checkTypeLevelValue(type, source = node.source)
+//    })
 }
 
-private fun typeCheckVarargsDeclaration(declaration: VarargsDeclarationNode, context: TypeContext) {
+private fun typeCheckVarargsDeclaration(declaration: VarargsDeclarationNode): TypeCheckSteps {
     // TODO: check other parts of function type (no effects, no other args, etc.)
-    val type = VarargsType(
-        qualifiedName = context.qualifiedNameType(declaration.name),
-        // TODO: check properly
-        cons = inferType(declaration.cons, context) as FunctionType,
-        nil = inferType(declaration.nil, context)
+//    val type = VarargsType(
+//        qualifiedName = context.qualifiedNameType(declaration.name),
+//        // TODO: check properly
+//        cons = inferType(declaration.cons, context) as FunctionType,
+//        nil = inferType(declaration.nil, context)
+//    )
+//    context.addVariableType(declaration, type)
+    return TypeCheckSteps(
+        listOf()
     )
-    context.addVariableType(declaration, type)
 }
 
-internal fun typeCheckFunctionDefinition(function: FunctionDefinitionNode, context: TypeContext) {
-    val type = typeCheckFunction(function, context)
-    context.addFunctionType(function, type)
-    context.addVariableType(function, type)
+internal fun typeCheckFunctionDefinition(function: FunctionDefinitionNode): TypeCheckSteps {
+    return TypeCheckSteps(listOf())
+//    val type = typeCheckFunction(function, context)
+//    context.addFunctionType(function, type)
+//    context.addVariableType(function, type)
 }
 
 
@@ -309,22 +441,22 @@ internal fun typeCheckFunctionStatement(statement: FunctionStatementNode, contex
         }
 
         override fun visit(node: ValNode): Type {
-            typeCheckVal(node, context)
+            typeCheckVal(node).runAllPhases(context)
             return UnitType
         }
 
         override fun visit(node: FunctionDefinitionNode): Type {
-            typeCheckFunctionDefinition(node, context)
+            typeCheckFunctionDefinition(node).runAllPhases(context)
             return UnitType
         }
 
         override fun visit(node: ShapeNode): Type {
-            typeCheckShapeDefinition(node, context)
+            typeCheckShapeDefinition(node).runAllPhases(context)
             return UnitType
         }
 
         override fun visit(node: EffectDefinitionNode): Type {
-            typeCheckEffectDefinition(node, context)
+            typeCheckEffectDefinition(node).runAllPhases(context)
             return UnitType
         }
     })
@@ -359,11 +491,16 @@ private fun typeCheckResume(node: ResumeNode, context: TypeContext): NothingType
     return NothingType
 }
 
-private fun typeCheckVal(node: ValNode, context: TypeContext) {
-    val type = inferType(node.expression, context)
-    val target = node.target
+private fun typeCheckVal(node: ValNode): TypeCheckSteps {
+    return TypeCheckSteps(
+        listOf(
+            TypeCheckStep.generateTypeInfo { context ->
+                val type = inferType(node.expression, context)
 
-    return typeCheckTarget(target, type, context)
+                typeCheckTarget(node.target, type, context)
+            }
+        )
+    )
 }
 
 internal fun typeCheckTarget(target: TargetNode, type: Type, context: TypeContext) {

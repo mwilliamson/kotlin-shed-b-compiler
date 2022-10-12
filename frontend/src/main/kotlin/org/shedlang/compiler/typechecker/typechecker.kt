@@ -307,15 +307,12 @@ internal fun typeCheckModule(moduleName: ModuleName, module: ModuleNode, context
         typeCheckImport(import, context)
     }
 
-    val (typeDeclarations, otherStatements) = module.body
-        .partition({ statement -> statement is TypeDeclarationNode })
+    val stepSets = module.body.map { statement -> typeCheckModuleStatement(statement) }
 
-    for (typeDeclaration in typeDeclarations) {
-        typeCheckModuleStatement(typeDeclaration, context)
-    }
-
-    for (statement in otherStatements) {
-        typeCheckModuleStatement(statement, context)
+    for (phase in TypeCheckPhase.values()) {
+        for (steps in stepSets) {
+            steps.run(phase, context)
+        }
     }
 
     context.undefer()

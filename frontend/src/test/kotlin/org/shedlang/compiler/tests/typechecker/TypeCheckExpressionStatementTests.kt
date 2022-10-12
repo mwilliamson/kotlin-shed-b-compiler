@@ -58,8 +58,7 @@ class TypeCheckExpressionStatementTests {
                 boolDeclaration to BoolMetaType
             )
         )
-        typeCheckFunctionDefinition(functionDeclaration, context)
-        context.undefer()
+        typeCheckModuleStatementAllPhases(functionDeclaration, context)
     }
 
     @Test

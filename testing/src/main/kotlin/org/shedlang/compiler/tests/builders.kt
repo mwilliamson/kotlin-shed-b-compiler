@@ -2,6 +2,7 @@ package org.shedlang.compiler.tests
 
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*
+import org.shedlang.compiler.util.Box
 
 fun anySource(): Source {
     return StringSource(filename = "<string>", contents = "", characterIndex = 0)
@@ -607,7 +608,10 @@ fun typeLevelUnion(
 fun typeAlias(
     name: String,
     aliasedType: Type
-) = LazyTypeAlias(name = Identifier(name), getAliasedType = lazy { aliasedType })
+) = LazyTypeAlias(
+    name = Identifier(name),
+    aliasedTypeBox = Box.of(aliasedType),
+)
 
 fun parametrizedShapeType(
     name: String = "Shape",
@@ -705,23 +709,22 @@ fun userDefinedEffect(
     name: Identifier,
     getOperations: (UserDefinedEffect) -> Map<Identifier, FunctionType> = { mapOf() }
 ): UserDefinedEffect {
-    var effect: UserDefinedEffect? = null
-    effect = userDefinedEffect(
+    val operationsBox = Box.mutable<Map<Identifier, FunctionType>>()
+    val effect = userDefinedEffect(
         name = name,
-        getOperations = lazy {
-            getOperations(effect!!)
-        }
+        operationsBox = operationsBox
     )
+    operationsBox.set(getOperations(effect))
     return effect
 }
 
 fun userDefinedEffect(
     name: Identifier,
-    getOperations: Lazy<Map<Identifier, FunctionType>>
+    operationsBox: Box<Map<Identifier, FunctionType>>
 ) = UserDefinedEffect(
     definitionId = freshNodeId(),
     name = name,
-    getOperations = getOperations
+    operationsBox = operationsBox
 )
 
 fun opaqueEffect(name: String) = OpaqueEffect(

@@ -3,6 +3,7 @@ package org.shedlang.compiler.types
 import org.shedlang.compiler.CannotUnionTypesError
 import org.shedlang.compiler.InternalCompilerError
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.util.Box
 
 interface TypeGroup {
     val shortDescription: String
@@ -544,10 +545,9 @@ fun unalias(initialType: Type): Type {
 
 data class LazyTypeAlias(
     override val name: Identifier,
-    private val getAliasedType: Lazy<Type>
+    private val aliasedTypeBox: Box<Type>
 ): TypeAlias {
-    override val aliasedType: Type
-        get() = getAliasedType.value
+    override val aliasedType: Type by aliasedTypeBox
 
     override val shortDescription: String
         get() = name.value
@@ -639,6 +639,21 @@ data class Field(
         type = func(type),
     )
 }
+
+fun shapeType(
+    shapeId: Int,
+    qualifiedName: QualifiedName,
+    tagValue: TagValue?,
+    fieldsBox: Box<List<Field>>,
+) = LazySimpleShapeType(
+    shapeId = shapeId,
+    qualifiedName = qualifiedName,
+    // TODO: remove lazy
+    getAllFields = lazy {
+        fieldsBox.get().associateBy { field -> field.name }
+    },
+    tagValue = tagValue,
+)
 
 fun lazyShapeType(
     shapeId: Int,

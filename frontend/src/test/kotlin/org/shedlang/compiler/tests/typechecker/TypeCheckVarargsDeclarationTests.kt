@@ -33,7 +33,7 @@ class TypeCheckVarargsDeclarationTests {
                 nilReference to nilType
             )
         )
-        typeCheckModuleStatement(node, typeContext)
+        typeCheckModuleStatementAllPhases(node, typeContext)
 
         assertThat(typeContext.typeOf(node), isType(VarargsType(
             qualifiedName = QualifiedName.topLevelType(listOf("Example"), "list"),

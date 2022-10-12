@@ -25,7 +25,7 @@ class TypeCheckShapeTests {
             ),
         )
 
-        typeCheckModuleStatement(node, typeContext)
+        typeCheckModuleStatementAllPhases(node, typeContext)
 
         assertThat(typeContext.typeOf(node), isMetaType(
             isShapeType(
@@ -52,7 +52,7 @@ class TypeCheckShapeTests {
         ))
 
         assertThat(
-            { typeCheckModuleStatement(node, typeContext) },
+            { typeCheckModuleStatementAllPhases(node, typeContext) },
             throws(
                 has(FieldAlreadyDeclaredError::fieldName, isIdentifier("a"))
             )
@@ -94,7 +94,7 @@ class TypeCheckShapeTests {
             extendsShape1Reference to metaType(shape1),
             extendsShape2Reference to metaType(shape2)
         ))
-        typeCheckModuleStatement(node, typeContext)
+        typeCheckModuleStatementAllPhases(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(
             isShapeType(
                 fields = isSequence(
@@ -188,7 +188,7 @@ class TypeCheckShapeTests {
             extendsShape1Reference to metaType(shape1),
             extendsShape2Reference to metaType(shape2)
         ))
-        typeCheckModuleStatement(node, typeContext)
+        typeCheckModuleStatementAllPhases(node, typeContext)
         typeContext.undefer()
 
         val metaType = typeContext.typeOf(node)
@@ -216,7 +216,7 @@ class TypeCheckShapeTests {
         ))
         assertThat(
             {
-                typeCheckModuleStatement(node, typeContext)
+                typeCheckModuleStatementAllPhases(node, typeContext)
                 typeContext.undefer()
             },
             throws(
@@ -245,7 +245,7 @@ class TypeCheckShapeTests {
             stringTypeReference to StringMetaType,
             baseReference to metaType(base)
         ))
-        typeCheckModuleStatement(node, typeContext)
+        typeCheckModuleStatementAllPhases(node, typeContext)
         typeContext.undefer()
         val metaType = typeContext.typeOf(node)
         assertThat(metaType, isMetaType(isShapeType()))
@@ -278,7 +278,7 @@ class TypeCheckShapeTests {
         ))
         assertThat(
             {
-                typeCheckModuleStatement(node, typeContext)
+                typeCheckModuleStatementAllPhases(node, typeContext)
                 typeContext.undefer()
             },
             throws(allOf(
@@ -305,7 +305,7 @@ class TypeCheckShapeTests {
         val typeContext = typeContext(
             references = mapOf(typeParameterReference to typeParameterDeclaration)
         )
-        typeCheckModuleStatement(node, typeContext)
+        typeCheckModuleStatementAllPhases(node, typeContext)
         assertThat(typeContext.typeOf(node), isTypeLevelValueType(isTypeConstructor(
             parameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = isInvariant)),
             genericType = isShapeType(
@@ -329,7 +329,7 @@ class TypeCheckShapeTests {
         val typeContext = typeContext(
             references = mapOf(typeParameterReference to typeParameterDeclaration)
         )
-        typeCheckModuleStatement(node, typeContext)
+        typeCheckModuleStatementAllPhases(node, typeContext)
         assertThat(typeContext.typeOf(node), isTypeLevelValueType(isTypeConstructor(
             parameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = isCovariant))
         )))
@@ -354,7 +354,7 @@ class TypeCheckShapeTests {
         )
         // TODO: use more specific exception
         assertThat(
-            { typeCheckModuleStatement(node, typeContext); typeContext.undefer() },
+            { typeCheckModuleStatementAllPhases(node, typeContext); typeContext.undefer() },
             throws(has(TypeCheckError::message, equalTo("field type cannot be contravariant")))
         )
     }
