@@ -392,23 +392,42 @@ private fun typeCheckUnion(node: UnionNode): TypeCheckSteps {
 
 private fun typeCheckVarargsDeclaration(declaration: VarargsDeclarationNode): TypeCheckSteps {
     // TODO: check other parts of function type (no effects, no other args, etc.)
-//    val type = VarargsType(
-//        qualifiedName = context.qualifiedNameType(declaration.name),
-//        // TODO: check properly
-//        cons = inferType(declaration.cons, context) as FunctionType,
-//        nil = inferType(declaration.nil, context)
-//    )
-//    context.addVariableType(declaration, type)
     return TypeCheckSteps(
-        listOf()
+        listOf(
+            TypeCheckStep.generateTypeInfo { context ->
+                val type = VarargsType(
+                    qualifiedName = context.qualifiedNameType(declaration.name),
+                    // TODO: check properly
+                    cons = inferType(declaration.cons, context) as FunctionType,
+                    nil = inferType(declaration.nil, context)
+                )
+                context.addVariableType(declaration, type)
+            }
+        )
     )
 }
 
 internal fun typeCheckFunctionDefinition(function: FunctionDefinitionNode): TypeCheckSteps {
-    return TypeCheckSteps(listOf())
-//    val type = typeCheckFunction(function, context)
-//    context.addFunctionType(function, type)
-//    context.addVariableType(function, type)
+    val functionTypeCheckerBox = Box.mutable<FunctionTypeChecker>()
+
+    return TypeCheckSteps(
+        listOf(
+            TypeCheckStep.defineFunctions { context ->
+                val functionTypeChecker = typeCheckFunctionSignature(function, hint = null, context = context)
+                functionTypeCheckerBox.set(functionTypeChecker)
+                val type = functionTypeChecker.toFunctionType()
+
+                context.addFunctionType(function, type)
+                context.addVariableType(function, type)
+            },
+
+            TypeCheckStep.typeCheckBodies { context ->
+                val functionTypeChecker = functionTypeCheckerBox.get()
+
+                functionTypeChecker.typeCheckBody(context)
+            }
+        ),
+    )
 }
 
 

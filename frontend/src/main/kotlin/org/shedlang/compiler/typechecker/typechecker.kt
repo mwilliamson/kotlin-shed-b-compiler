@@ -396,90 +396,136 @@ internal fun typeCheckFunction(
     handle: HandleTypes? = null,
     implicitEffect: Effect = EmptyEffect
 ): FunctionType {
+    val functionHint = hint as? FunctionType
+
+    return typeCheckFunctionSignature(function, context, functionHint)
+        .unionEffect(implicitEffect)
+        .typeCheckBody(context, handle = handle)
+        .toFunctionType()
+}
+
+internal data class FunctionTypeChecker(
+    val functionNode: FunctionNode,
+    val typeLevelParameters: List<TypeLevelParameter>,
+    val positionalParameterTypes: List<Type>,
+    val namedParameterTypes: List<Type>,
+    val effect: Effect,
+    val returnType: Type?,
+    val hint: FunctionType?
+) {
+    fun unionEffect(effect: Effect): FunctionTypeChecker {
+        return copy(effect = effectUnion(this.effect, effect))
+    }
+
+    fun typeCheckBody(context: TypeContext, handle: HandleTypes? = null): FunctionTypeChecker {
+        val bodyContext = context.enterFunction(
+            functionNode,
+            handle = handle,
+            effect = effect,
+        )
+        val actualReturnType = typeCheckBlock(functionNode.body, bodyContext)
+
+        if (returnType == null) {
+            return copy(returnType = actualReturnType)
+        } else {
+            val returnSource = (functionNode.body.statements.lastOrNull() ?: functionNode.body).source
+            verifyType(expected = returnType, actual = actualReturnType, source = returnSource)
+            return this
+        }
+    }
+
+    fun toFunctionType(): FunctionType {
+        if (returnType == null) {
+            throw MissingReturnTypeError("Could not infer return type for function", source = functionNode.source)
+        }
+
+        return FunctionType(
+            typeLevelParameters = typeLevelParameters,
+            positionalParameters = positionalParameterTypes,
+            namedParameters = functionNode.namedParameters.zip(namedParameterTypes) { parameter, type ->
+                parameter.name to type
+            }.toMap(),
+            effect = effect,
+            returns = returnType,
+        )
+    }
+}
+
+internal fun typeCheckFunctionSignature(
+    function: FunctionNode,
+    context: TypeContext,
+    hint: FunctionType?,
+): FunctionTypeChecker {
     val typeLevelParameters = typeCheckTypeLevelParameters(function.typeLevelParameters, context)
 
-    fun evalParameterType(parameter: ParameterNode, parameterHint: Type?): Type {
-        val parameterType = parameter.type
-        if (parameterType != null) {
-            return evalType(parameterType, context)
-        } else if (parameterHint != null) {
-            return parameterHint
-        } else {
-            throw MissingParameterTypeError("Missing type for parameter ${parameter.name.value}", source = parameter.source)
-        }
-    }
+    val positionalParameterTypes =
+        typeCheckPositionalParameters(function, hint = hint, context = context)
 
-    val positionalParameterTypes = function.parameters.mapIndexed { parameterIndex, parameter ->
-        // TODO: test this more thoroughly?
-        val parameterHint = if (hint != null && hint is FunctionType && parameterIndex < hint.positionalParameters.size) {
-            hint.positionalParameters[parameterIndex]
-        } else {
-            null
-        }
-        evalParameterType(parameter, parameterHint = parameterHint)
-    }
-
-    val namedParameterTypes = function.namedParameters.map { parameter ->
-        // TODO: test this more thoroughly?
-        val parameterHint = if (hint != null && hint is FunctionType) {
-            hint.namedParameters[parameter.name]
-        } else {
-            null
-        }
-        evalParameterType(parameter, parameterHint = parameterHint)
-    }
+    val namedParameterTypes =
+        typeCheckNamedParameters(function, hint = hint, context = context)
 
     context.addVariableTypes((function.parameters + function.namedParameters).zip(
         positionalParameterTypes + namedParameterTypes,
         { argument, argumentType -> argument.nodeId to argumentType }
     ).toMap())
 
-    val functionHint = hint as? FunctionType
-    val explicitEffect = evalFunctionDefinitionEffect(function.effect, context, effectHint = functionHint?.effect)
-    val effect = effectUnion(implicitEffect, explicitEffect)
+    val effect = evalFunctionDefinitionEffect(function.effect, context, effectHint = hint?.effect)
 
-    val body = function.body
     val returnTypeNode = function.returnType
-    val explicitReturnType = if (returnTypeNode == null) {
+    val returnType = if (returnTypeNode == null) {
         null
     } else {
         evalType(returnTypeNode, context)
     }
 
-    val actualReturnType = lazy {
-        val bodyContext = context.enterFunction(
-            function,
-            handle = handle,
-            effect = effect
-        )
-        typeCheckBlock(body, bodyContext)
-    }
-
-    // TODO: test that inference takes precedence over hint
-    val returnType = if (explicitReturnType != null) {
-        explicitReturnType
-    } else if (function.inferReturnType) {
-        actualReturnType.value
-    } else if (functionHint != null) {
-        hint.returns
-    } else {
-        throw MissingReturnTypeError("Could not infer return type for function", source = function.source)
-    }
-
-    context.defer {
-        val returnSource = (body.statements.lastOrNull() ?: body).source
-        verifyType(expected = returnType, actual = actualReturnType.value, source = returnSource)
-    }
-
-    return FunctionType(
+    return FunctionTypeChecker(
+        functionNode = function,
         typeLevelParameters = typeLevelParameters,
-        positionalParameters = positionalParameterTypes,
-        namedParameters = function.namedParameters.zip(namedParameterTypes, { parameter, type ->
-            parameter.name to type
-        }).toMap(),
+        positionalParameterTypes = positionalParameterTypes,
+        namedParameterTypes = namedParameterTypes,
         effect = effect,
-        returns = returnType
+        returnType = returnType,
+        hint = hint,
     )
+}
+
+private fun typeCheckPositionalParameters(
+    function: FunctionNode,
+    hint: FunctionType?,
+    context: TypeContext,
+) = function.parameters.mapIndexed { parameterIndex, parameter ->
+    // TODO: test this more thoroughly?
+    val parameterHint = if (hint != null) {
+        hint.positionalParameters.getOrNull(parameterIndex)
+    } else {
+        null
+    }
+    evalParameterType(parameter, parameterHint = parameterHint, context = context)
+}
+
+private fun typeCheckNamedParameters(
+    function: FunctionNode,
+    hint: FunctionType?,
+    context: TypeContext,
+) = function.namedParameters.map { parameter ->
+    // TODO: test this more thoroughly?
+    val parameterHint = if (hint != null) {
+        hint.namedParameters[parameter.name]
+    } else {
+        null
+    }
+    evalParameterType(parameter, parameterHint = parameterHint, context = context)
+}
+
+private fun evalParameterType(parameter: ParameterNode, parameterHint: Type?, context: TypeContext): Type {
+    val parameterType = parameter.type
+    if (parameterType != null) {
+        return evalType(parameterType, context)
+    } else if (parameterHint != null) {
+        return parameterHint
+    } else {
+        throw MissingParameterTypeError("Missing type for parameter ${parameter.name.value}", source = parameter.source)
+    }
 }
 
 private fun evalFunctionDefinitionEffect(node: FunctionEffectNode?, context: TypeContext, effectHint: Effect?): Effect {
