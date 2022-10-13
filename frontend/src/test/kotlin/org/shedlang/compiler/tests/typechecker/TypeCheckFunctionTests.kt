@@ -3,6 +3,7 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.shedlang.compiler.ast.FunctionDefinitionNode
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.Source
@@ -109,10 +110,9 @@ class TypeCheckFunctionTests {
             returnType = intType,
             body = listOf(expressionStatementReturn(literalBool(true)))
         )
-        typeCheckFunctionDefinition(node, typeContext)
 
         assertThat(
-            { typeContext.undefer() },
+            { typeCheckFunctionDefinition(node, typeContext) },
             throwsUnexpectedType(expected = IntType, actual = BoolType)
         )
     }
@@ -290,7 +290,7 @@ class TypeCheckFunctionTests {
                 parameter(name = "y", type = boolType)
             ),
             returnType = intType,
-            body = listOf(expressionStatement(literalInt()))
+            body = listOf(expressionStatementReturn(literalInt()))
         )
         val typeContext = typeContext(referenceTypes = mapOf(
             intType to IntMetaType,
