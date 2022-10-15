@@ -14,7 +14,7 @@ class TypeCheckExpressionStatementTests {
         val functionReference = variableReference("f")
         val node = expressionStatement(call(functionReference))
         assertThat(
-            { typeCheckFunctionStatement(node, typeContext(referenceTypes = mapOf(functionReference to UnitType))) },
+            { typeCheckFunctionStatementAllPhases(node, typeContext(referenceTypes = mapOf(functionReference to UnitType))) },
             throws(has(UnexpectedTypeError::actual, equalTo<Type>(UnitType)))
         )
     }
@@ -22,14 +22,14 @@ class TypeCheckExpressionStatementTests {
     @Test
     fun nonReturningExpressionStatementHasUnitType() {
         val node = expressionStatementNoReturn(literalBool())
-        val type = typeCheckFunctionStatement(node, typeContext())
+        val type = typeCheckFunctionStatementAllPhases(node, typeContext())
         assertThat(type, isUnitType)
     }
 
     @Test
     fun returningExpressionStatementHasTypeOfExpression() {
         val node = expressionStatementReturn(literalBool())
-        val type = typeCheckFunctionStatement(node, typeContext())
+        val type = typeCheckFunctionStatementAllPhases(node, typeContext())
         assertThat(type, isBoolType)
     }
 
@@ -64,7 +64,7 @@ class TypeCheckExpressionStatementTests {
     @Test
     fun exitHasTypeOfExpression() {
         val node = exit(literalBool())
-        val type = typeCheckFunctionStatement(node, typeContext())
+        val type = typeCheckFunctionStatementAllPhases(node, typeContext())
         assertThat(type, isBoolType)
     }
 
@@ -73,7 +73,7 @@ class TypeCheckExpressionStatementTests {
         val node = resume(literalBool())
 
         val context = typeContext(handle = HandleTypes(resumeValueType = BoolType, stateType = null))
-        val type = typeCheckFunctionStatement(node, context)
+        val type = typeCheckFunctionStatementAllPhases(node, context)
 
         assertThat(type, isNothingType)
     }
@@ -84,7 +84,7 @@ class TypeCheckExpressionStatementTests {
 
         val context = typeContext(handle = HandleTypes(resumeValueType = IntType, stateType = null))
         assertThat(
-            { typeCheckFunctionStatement(node, context) },
+            { typeCheckFunctionStatementAllPhases(node, context) },
             throws(allOf(
                 has(UnexpectedTypeError::expected, cast(isIntType)),
                 has(UnexpectedTypeError::actual, isBoolType)
@@ -98,7 +98,7 @@ class TypeCheckExpressionStatementTests {
 
         val context = typeContext(handle = null)
         assertThat(
-            { typeCheckFunctionStatement(node, context) },
+            { typeCheckFunctionStatementAllPhases(node, context) },
             throwsException<CannotResumeOutsideOfHandler>(),
         )
     }
@@ -111,7 +111,7 @@ class TypeCheckExpressionStatementTests {
             referenceTypes = mapOf(receiver to functionType(returns = NothingType)),
         )
 
-        val type = typeCheckFunctionStatement(node, context)
+        val type = typeCheckFunctionStatementAllPhases(node, context)
 
         assertThat(type, isNothingType)
     }

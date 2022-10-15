@@ -3,7 +3,6 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.shedlang.compiler.ast.FunctionDefinitionNode
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.Source
@@ -514,19 +513,6 @@ class TypeCheckFunctionTests {
     }
 
     @Test
-    fun whenExplicitReturnTypeIsMissingAndReturnTypeCannotBeInferredThenErrorIsThrown() {
-        val node = functionExpression(
-            returnType = null,
-            body = listOf(expressionStatement(literalBool()))
-        )
-        val typeContext = typeContext()
-        assertThat(
-            { inferType(node, typeContext) },
-            throwsException(has(MissingReturnTypeError::message, equalTo("Could not infer return type for function")))
-        )
-    }
-
-    @Test
     fun whenExplicitReturnTypeIsMissingThenReturnTypeCanBeInferredFromContext() {
         val source = object: Source {
             override fun describe(): String {
@@ -553,7 +539,12 @@ class TypeCheckFunctionTests {
         )
         assertThat(
             { inferCallType(call, typeContext); typeContext.undefer() },
-            throwsUnexpectedType(expected = cast(isIntType), actual = isBoolType, source = equalTo(source))
+            throwsUnexpectedType(
+                expected = cast(isFunctionType(returnType = isIntType)),
+                actual = isFunctionType(returnType = isBoolType),
+            )
+            // TODO: push the return type in?
+            //throwsUnexpectedType(expected = cast(isIntType), actual = isBoolType, source = equalTo(source))
         )
     }
 
@@ -586,7 +577,7 @@ class TypeCheckFunctionTests {
         )
 
         val functionContext = typeContext.enterFunction(function(), handle = null, effect = EmptyEffect)
-        typeCheckFunctionStatement(node, functionContext)
+        typeCheckFunctionStatementAllPhases(node, functionContext)
         typeContext.undefer()
         assertThat(
             functionContext.typeOf(node),

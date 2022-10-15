@@ -9,12 +9,12 @@ import org.shedlang.compiler.util.Box
 
 internal fun typeCheckModuleStatement(statement: ModuleStatementNode): TypeCheckSteps {
     return statement.accept(object : ModuleStatementNode.Visitor<TypeCheckSteps> {
-        override fun visit(node: EffectDefinitionNode) = typeCheckEffectDefinition(node)
+        override fun visit(node: EffectDefinitionNode) = TypeCheckSteps(typeCheckEffectDefinitionSteps(node))
         override fun visit(node: TypeAliasNode) = typeCheckTypeAlias(node)
-        override fun visit(node: ShapeNode) = typeCheckShapeDefinition(node)
+        override fun visit(node: ShapeNode) = TypeCheckSteps(typeCheckShapeDefinitionSteps(node))
         override fun visit(node: UnionNode) = typeCheckUnion(node)
-        override fun visit(node: FunctionDefinitionNode) = typeCheckFunctionDefinition(node)
-        override fun visit(node: ValNode) = typeCheckVal(node)
+        override fun visit(node: FunctionDefinitionNode) = TypeCheckSteps(typeCheckFunctionDefinitionSteps(node))
+        override fun visit(node: ValNode) = TypeCheckSteps(typeCheckValSteps(node))
         override fun visit(node: VarargsDeclarationNode) = typeCheckVarargsDeclaration(node)
     })
 }
@@ -65,34 +65,32 @@ internal class TypeCheckSteps(private val steps: List<TypeCheckStep>) {
     }
 }
 
-private fun typeCheckEffectDefinition(node: EffectDefinitionNode): TypeCheckSteps {
+private fun typeCheckEffectDefinitionSteps(node: EffectDefinitionNode): List<TypeCheckStep> {
     val effectBox = Box.mutable<UserDefinedEffect>()
     val operationsBox = Box.mutable<Map<Identifier, FunctionType>>()
 
-    return TypeCheckSteps(
-        listOf(
-            TypeCheckStep.defineTypeLevelValues { context ->
-                val effect = UserDefinedEffect(
-                    definitionId = node.nodeId,
-                    name = node.name,
-                    operationsBox = operationsBox
-                )
-                effectBox.set(effect)
-                context.addVariableType(node, TypeLevelValueType(effect))
-            },
+    return listOf(
+        TypeCheckStep.defineTypeLevelValues { context ->
+            val effect = UserDefinedEffect(
+                definitionId = node.nodeId,
+                name = node.name,
+                operationsBox = operationsBox
+            )
+            effectBox.set(effect)
+            context.addVariableType(node, TypeLevelValueType(effect))
+        },
 
-            TypeCheckStep.generateTypeInfo { context ->
-                val effect = effectBox.get()
+        TypeCheckStep.generateTypeInfo { context ->
+            val effect = effectBox.get()
 
-                val operations = node.operations.map { (operationName, operationTypeNode) ->
-                    // TODO: throw appropriate error on wrong type
-                    val operationType = evalTypeLevelValue(operationTypeNode, context) as FunctionType
-                    operationName to operationType.copy(effect = effectUnion(operationType.effect, effect))
-                }.toMap()
+            val operations = node.operations.map { (operationName, operationTypeNode) ->
+                // TODO: throw appropriate error on wrong type
+                val operationType = evalTypeLevelValue(operationTypeNode, context) as FunctionType
+                operationName to operationType.copy(effect = effectUnion(operationType.effect, effect))
+            }.toMap()
 
-                operationsBox.set(operations)
-            }
-        ),
+            operationsBox.set(operations)
+        }
     )
 }
 
@@ -117,51 +115,49 @@ private fun typeCheckTypeAlias(node: TypeAliasNode): TypeCheckSteps {
     )
 }
 
-private fun typeCheckShapeDefinition(node: ShapeNode): TypeCheckSteps {
-    return generateShapeType(node)
+private fun typeCheckShapeDefinitionSteps(node: ShapeNode): List<TypeCheckStep> {
+    return generateShapeTypeSteps(node)
 }
 
-private fun generateShapeType(
+private fun generateShapeTypeSteps(
     node: ShapeBaseNode,
     tagValueBox: Box<TagValue?> = Box.of(null)
-): TypeCheckSteps {
+): List<TypeCheckStep> {
     val shapeId = freshTypeId()
     val typeBox = Box.mutable<TypeLevelValue>()
     val fieldsBox = Box.mutable<List<Field>>()
 
-    return TypeCheckSteps(
-        listOf(
-            TypeCheckStep.defineTypeLevelValues { context ->
-                val tagValue = tagValueBox.get()
+    return listOf(
+        TypeCheckStep.defineTypeLevelValues { context ->
+            val tagValue = tagValueBox.get()
 
-                val typeLevelParameters = typeCheckTypeLevelParameters(node.typeLevelParameters, context)
+            val typeLevelParameters = typeCheckTypeLevelParameters(node.typeLevelParameters, context)
 
-                val shapeType = shapeType(
-                    shapeId = shapeId,
-                    qualifiedName = context.qualifiedNameType(node.name),
-                    tagValue = tagValue,
-                    fieldsBox = fieldsBox,
-                )
-                val type = if (node.typeLevelParameters.isEmpty()) {
-                    shapeType
-                } else {
-                    TypeConstructor(typeLevelParameters, shapeType)
-                }
-                typeBox.set(type)
-                context.addVariableType(node, TypeLevelValueType(type))
-            },
-
-            TypeCheckStep.generateTypeInfo { context ->
-                // TODO: test laziness
-                val fields = generateFields(node, context, shapeId)
-                fieldsBox.set(fields)
-            },
-
-            TypeCheckStep.typeCheckBodies { context ->
-                val type = typeBox.get()
-                checkTypeLevelValue(type, source = node.source)
+            val shapeType = shapeType(
+                shapeId = shapeId,
+                qualifiedName = context.qualifiedNameType(node.name),
+                tagValue = tagValue,
+                fieldsBox = fieldsBox,
+            )
+            val type = if (node.typeLevelParameters.isEmpty()) {
+                shapeType
+            } else {
+                TypeConstructor(typeLevelParameters, shapeType)
             }
-        ),
+            typeBox.set(type)
+            context.addVariableType(node, TypeLevelValueType(type))
+        },
+
+        TypeCheckStep.generateTypeInfo { context ->
+            // TODO: test laziness
+            val fields = generateFields(node, context, shapeId)
+            fieldsBox.set(fields)
+        },
+
+        TypeCheckStep.typeCheckBodies { context ->
+            val type = typeBox.get()
+            checkTypeLevelValue(type, source = node.source)
+        }
     )
 }
 
@@ -299,10 +295,10 @@ private fun typeCheckUnion(node: UnionNode): TypeCheckSteps {
 
     val membersSteps = node.members.map { member ->
         val tagValueBox = tagBox.map { tag -> TagValue(tag, member.name) }
-        generateShapeType(
+        TypeCheckSteps(generateShapeTypeSteps(
             member,
             tagValueBox = tagValueBox
-        )
+        ))
     }
 
     return TypeCheckSteps(
@@ -407,118 +403,157 @@ private fun typeCheckVarargsDeclaration(declaration: VarargsDeclarationNode): Ty
     )
 }
 
-internal fun typeCheckFunctionDefinition(function: FunctionDefinitionNode): TypeCheckSteps {
+internal fun typeCheckFunctionDefinitionSteps(function: FunctionDefinitionNode): List<TypeCheckStep> {
     val functionTypeCheckerBox = Box.mutable<FunctionTypeChecker>()
 
-    return TypeCheckSteps(
-        listOf(
-            TypeCheckStep.defineFunctions { context ->
-                val functionTypeChecker = typeCheckFunctionSignature(function, hint = null, context = context)
-                functionTypeCheckerBox.set(functionTypeChecker)
-                val type = functionTypeChecker.toFunctionType()
+    return listOf(
+        TypeCheckStep.defineFunctions { context ->
+            val functionTypeChecker = typeCheckFunctionSignature(function, hint = null, context = context)
+            functionTypeCheckerBox.set(functionTypeChecker)
+            val type = functionTypeChecker.toFunctionType()
 
-                context.addFunctionType(function, type)
-                context.addVariableType(function, type)
-            },
+            context.addFunctionType(function, type)
+            context.addVariableType(function, type)
+        },
 
-            TypeCheckStep.typeCheckBodies { context ->
-                val functionTypeChecker = functionTypeCheckerBox.get()
+        TypeCheckStep.typeCheckBodies { context ->
+            val functionTypeChecker = functionTypeCheckerBox.get()
 
-                functionTypeChecker.typeCheckBody(context)
-            }
-        ),
+            functionTypeChecker.typeCheckBody(context)
+        }
     )
 }
 
+internal class FunctionStatementTypeChecker(
+    private val steps: List<TypeCheckStep>,
+    private val typeBox: Box<Type>
+) {
+    // TODO: Remove duplication with TypeCheckSteps
+    fun run(phase: TypeCheckPhase, context: TypeContext) {
+        for (step in steps) {
+            if (step.phase == phase) {
+                step.func(context)
+            }
+        }
+    }
 
-internal fun typeCheckFunctionStatement(statement: FunctionStatementNode, context: TypeContext): Type {
-    return statement.accept(object : FunctionStatementNode.Visitor<Type> {
-        override fun visit(node: BadStatementNode): Type {
+    fun type(): Type {
+        return typeBox.get()
+    }
+}
+
+internal fun typeCheckFunctionStatementSteps(statement: FunctionStatementNode): FunctionStatementTypeChecker {
+    return statement.accept(object : FunctionStatementNode.Visitor<FunctionStatementTypeChecker> {
+        override fun visit(node: BadStatementNode): FunctionStatementTypeChecker {
             throw BadStatementError(node.source)
         }
 
-        override fun visit(node: ExpressionStatementNode): Type {
-            val type = inferType(node.expression, context)
+        override fun visit(node: ExpressionStatementNode): FunctionStatementTypeChecker {
+            val typeBox = Box.mutable<Type>()
 
-            if (type == NothingType) {
-                return NothingType
-            }
+            return FunctionStatementTypeChecker(
+                listOf(
+                    TypeCheckStep.typeCheckBodies { context ->
+                        val expressionType = inferType(node.expression, context)
 
-            return when (node.type) {
-                ExpressionStatementNode.Type.EXIT,
-                ExpressionStatementNode.Type.TAILREC,
-                ExpressionStatementNode.Type.VALUE ->
-                    type
+                        val type = if (expressionType == NothingType) {
+                            NothingType
+                        } else {
+                            when (node.type) {
+                                ExpressionStatementNode.Type.EXIT,
+                                ExpressionStatementNode.Type.TAILREC,
+                                ExpressionStatementNode.Type.VALUE
+                                ->
+                                    expressionType
 
-                ExpressionStatementNode.Type.NO_VALUE ->
-                    UnitType
-            }
+                                ExpressionStatementNode.Type.NO_VALUE ->
+                                    UnitType
+                            }
+                        }
+                        typeBox.set(type)
+                    }
+                ),
+                typeBox,
+            )
         }
 
-        override fun visit(node: ResumeNode): Type {
-            return typeCheckResume(node, context)
+        override fun visit(node: ResumeNode): FunctionStatementTypeChecker {
+            return typeCheckResume(node)
         }
 
-        override fun visit(node: ValNode): Type {
-            typeCheckVal(node).runAllPhases(context)
-            return UnitType
+        override fun visit(node: ValNode): FunctionStatementTypeChecker {
+            return FunctionStatementTypeChecker(
+                typeCheckValSteps(node),
+                Box.of(UnitType),
+            )
         }
 
-        override fun visit(node: FunctionDefinitionNode): Type {
-            typeCheckFunctionDefinition(node).runAllPhases(context)
-            return UnitType
+        override fun visit(node: FunctionDefinitionNode): FunctionStatementTypeChecker {
+            return FunctionStatementTypeChecker(
+                typeCheckFunctionDefinitionSteps(node),
+                Box.of(UnitType),
+            )
         }
 
-        override fun visit(node: ShapeNode): Type {
-            typeCheckShapeDefinition(node).runAllPhases(context)
-            return UnitType
+        override fun visit(node: ShapeNode): FunctionStatementTypeChecker {
+            return FunctionStatementTypeChecker(
+                typeCheckShapeDefinitionSteps(node),
+                Box.of(UnitType),
+            )
         }
 
-        override fun visit(node: EffectDefinitionNode): Type {
-            typeCheckEffectDefinition(node).runAllPhases(context)
-            return UnitType
+        override fun visit(node: EffectDefinitionNode): FunctionStatementTypeChecker {
+            return FunctionStatementTypeChecker(
+                typeCheckEffectDefinitionSteps(node),
+                Box.of(UnitType),
+            )
         }
     })
 }
 
-private fun typeCheckResume(node: ResumeNode, context: TypeContext): NothingType {
-    // TODO: check that we can resume in this context
-    val handle = context.handle
-    if (handle == null) {
-        throw CannotResumeOutsideOfHandler(source = node.source)
-    }
+private fun typeCheckResume(node: ResumeNode): FunctionStatementTypeChecker {
+    return FunctionStatementTypeChecker(
+        listOf(
+            TypeCheckStep.typeCheckBodies { context ->
 
-    verifyType(
-        expression = node.expression,
-        context = context,
-        expected = handle.resumeValueType,
+                // TODO: check that we can resume in this context
+                val handle = context.handle
+                if (handle == null) {
+                    throw CannotResumeOutsideOfHandler(source = node.source)
+                }
+
+                verifyType(
+                    expression = node.expression,
+                    context = context,
+                    expected = handle.resumeValueType,
+                )
+
+                val newState = node.newState
+                if (newState != null && handle.stateType == null) {
+                    throw CannotResumeWithStateInStatelessHandleError(source = node.source)
+                } else if (newState == null && handle.stateType != null) {
+                    throw ResumeMissingNewStateError(source = node.source)
+                } else if (newState != null && handle.stateType != null) {
+                    verifyType(
+                        expression = newState,
+                        context = context,
+                        expected = handle.stateType,
+                    )
+                }
+            }
+        ),
+
+        Box.of(NothingType),
     )
-
-    val newState = node.newState
-    if (newState != null && handle.stateType == null) {
-        throw CannotResumeWithStateInStatelessHandleError(source = node.source)
-    } else if (newState == null && handle.stateType != null) {
-        throw ResumeMissingNewStateError(source = node.source)
-    } else if (newState != null && handle.stateType != null) {
-        verifyType(
-            expression = newState,
-            context = context,
-            expected = handle.stateType,
-        )
-    }
-
-    return NothingType
 }
 
-private fun typeCheckVal(node: ValNode): TypeCheckSteps {
-    return TypeCheckSteps(
-        listOf(
-            TypeCheckStep.generateTypeInfo { context ->
-                val type = inferType(node.expression, context)
+private fun typeCheckValSteps(node: ValNode): List<TypeCheckStep> {
+    return listOf(
+        TypeCheckStep.generateTypeInfo { context ->
+            val type = inferType(node.expression, context)
 
-                typeCheckTarget(node.target, type, context)
-            }
-        )
+            typeCheckTarget(node.target, type, context)
+        }
     )
 }
 
@@ -557,11 +592,18 @@ internal fun typeCheckTarget(target: TargetNode, type: Type, context: TypeContex
 }
 
 internal fun typeCheckBlock(block: BlockNode, context: TypeContext): Type {
-    var type: Type = UnitType
+    val statementTypeCheckers = block.statements.map { statement -> typeCheckFunctionStatementSteps(statement) }
 
-    for (statement in block.statements) {
-        type = typeCheckFunctionStatement(statement, context)
+    for (phase in TypeCheckPhase.values()) {
+        for (statementTypeChecker in statementTypeCheckers) {
+            statementTypeChecker.run(phase, context)
+        }
     }
 
-    return type
+    val lastStatementTypeChecker = statementTypeCheckers.lastOrNull()
+    if (lastStatementTypeChecker == null) {
+        return UnitType
+    } else {
+        return lastStatementTypeChecker.type()
+    }
 }

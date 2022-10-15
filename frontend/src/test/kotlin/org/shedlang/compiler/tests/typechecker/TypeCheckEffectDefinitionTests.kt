@@ -4,8 +4,6 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.typeCheckFunctionStatement
-import org.shedlang.compiler.typechecker.typeCheckModuleStatement
 import org.shedlang.compiler.types.NothingType
 import org.shedlang.compiler.types.StringType
 import org.shedlang.compiler.types.metaType
@@ -34,7 +32,7 @@ class TypeCheckEffectDefinitionTests {
         )
 
         val typeContext = typeContext()
-        typeCheckFunctionStatement(effectDefinition, typeContext)
+        typeCheckFunctionStatementAllPhases(effectDefinition, typeContext)
 
         assertThat(typeContext.typeOf(effectDefinition), isEffectType(isUserDefinedEffect(
             name = isIdentifier("Try"),
