@@ -49,7 +49,6 @@ internal fun typeContext(
         discriminators = mutableMapOf(),
         resolvedReferences = ResolvedReferencesMap(finalReferences),
         typeRegistry = typeRegistry,
-        deferred = LinkedList(),
         getModule = { moduleName -> modules[moduleName]!! }
     )
 }

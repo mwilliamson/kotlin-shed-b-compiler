@@ -30,7 +30,6 @@ class TypeCheckFunctionTests {
         )
 
         typeCheckFunctionDefinition(node, typeContext)
-        typeContext.undefer()
 
         assertThat(typeContext.typeOf(typeParameter), isMetaType(
             cast(has(TypeParameter::name, isIdentifier("T")))
@@ -67,7 +66,6 @@ class TypeCheckFunctionTests {
         )
 
         typeCheckFunctionDefinition(node, typeContext)
-        typeContext.undefer()
 
         assertThat(typeContext.typeOf(effectParameter), isEffectType(
             cast(has(EffectParameter::name, isIdentifier("E")))
@@ -97,7 +95,6 @@ class TypeCheckFunctionTests {
                 body = listOf(badStatement)
             )
             typeCheckFunctionDefinition(node, typeContext)
-            typeContext.undefer()
         })
     }
 
@@ -131,7 +128,6 @@ class TypeCheckFunctionTests {
             references = mapOf(parameterReference to parameter)
         )
         typeCheckFunctionDefinition(node, typeContext)
-        typeContext.undefer()
 
         assertThat(
             typeContext.typeOf(node),
@@ -159,7 +155,6 @@ class TypeCheckFunctionTests {
 
         val typeCheck = {
             typeCheckFunction(node, typeContext)
-            typeContext.undefer()
         }
 
         assertThat(
@@ -186,7 +181,6 @@ class TypeCheckFunctionTests {
         )
 
         val functionType = typeCheckFunction(node, typeContext, hint = functionType(positionalParameters = listOf(IntType)))
-        typeContext.undefer()
 
         assertThat(
             functionType,
@@ -212,7 +206,6 @@ class TypeCheckFunctionTests {
             references = mapOf(parameterReference to parameter)
         )
         typeCheckFunctionDefinition(node, typeContext)
-        typeContext.undefer()
 
         assertThat(
             typeContext.typeOf(node),
@@ -240,7 +233,6 @@ class TypeCheckFunctionTests {
 
         val typeCheck = {
             typeCheckFunction(node, typeContext)
-            typeContext.undefer()
         }
 
         assertThat(
@@ -268,7 +260,6 @@ class TypeCheckFunctionTests {
 
         val hint = functionType(namedParameters = mapOf(Identifier("x") to IntType))
         val functionType = typeCheckFunction(node, typeContext, hint = hint)
-        typeContext.undefer()
 
         assertThat(
             functionType,
@@ -346,7 +337,6 @@ class TypeCheckFunctionTests {
         ))
         typeCheckFunctionDefinition(node, typeContext)
         // TODO: come up with a way of ensuring undefer() is eventually called
-        typeContext.undefer()
     }
 
     @Test
@@ -372,7 +362,6 @@ class TypeCheckFunctionTests {
         assertThat(
             {
                 typeCheckFunctionDefinition(node, typeContext)
-                typeContext.undefer()
             },
             throws(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
         )
@@ -401,7 +390,6 @@ class TypeCheckFunctionTests {
         ))
         inferType(node, typeContext, hint = functionType(effect = IoEffect))
         // TODO: come up with a way of ensuring undefer() is eventually called
-        typeContext.undefer()
     }
 
     @Test
@@ -428,7 +416,6 @@ class TypeCheckFunctionTests {
         assertThat(
             {
                 typeCheckFunctionDefinition(node, typeContext)
-                typeContext.undefer()
             },
             throws(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
         )
@@ -456,7 +443,6 @@ class TypeCheckFunctionTests {
         assertThat(
             {
                 inferType(node, typeContext)
-                typeContext.undefer()
             },
             throws(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
         )
@@ -476,7 +462,6 @@ class TypeCheckFunctionTests {
         assertThat(
             {
                 inferType(node, typeContext)
-                typeContext.undefer()
             },
             throwsUnexpectedType(expected = cast(isIntType), actual = isBoolType)
         )
@@ -538,7 +523,7 @@ class TypeCheckFunctionTests {
             referenceTypes = mapOf(functionReference to receiverType)
         )
         assertThat(
-            { inferCallType(call, typeContext); typeContext.undefer() },
+            { inferCallType(call, typeContext) },
             throwsUnexpectedType(
                 expected = cast(isFunctionType(returnType = isIntType)),
                 actual = isFunctionType(returnType = isBoolType),
@@ -559,7 +544,6 @@ class TypeCheckFunctionTests {
         )
 
         typeCheckModuleStatementAllPhases(node, typeContext)
-        typeContext.undefer()
         assertThat(
             typeContext.typeOf(node),
             isFunctionType()
@@ -578,7 +562,6 @@ class TypeCheckFunctionTests {
 
         val functionContext = typeContext.enterFunction(function(), handle = null, effect = EmptyEffect)
         typeCheckFunctionStatementAllPhases(node, functionContext)
-        typeContext.undefer()
         assertThat(
             functionContext.typeOf(node),
             isFunctionType()

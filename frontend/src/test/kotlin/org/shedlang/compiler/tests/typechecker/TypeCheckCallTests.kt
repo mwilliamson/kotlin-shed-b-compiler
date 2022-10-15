@@ -214,7 +214,6 @@ class TypeCheckCallTests {
             references = mapOf(parameterReference to parameter)
         )
         val type = inferCallType(node, typeContext)
-        typeContext.undefer()
 
         assertThat(type, cast(equalTo(IntType)))
     }
@@ -257,7 +256,6 @@ class TypeCheckCallTests {
             references = mapOf(parameterReference to parameter)
         )
         val type = inferCallType(node, typeContext)
-        typeContext.undefer()
 
         assertThat(type, cast(equalTo(IntType)))
     }

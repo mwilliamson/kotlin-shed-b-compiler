@@ -27,7 +27,6 @@ internal fun newTypeContext(
         resolvedReferences = resolvedReferences,
         typeRegistry = typeRegistry,
         getModule = getModule,
-        deferred = LinkedList()
     )
 }
 
@@ -46,7 +45,6 @@ internal class TypeContext(
     private val resolvedReferences: ResolvedReferences,
     private val typeRegistry: TypeRegistry,
     private val getModule: (ImportPath) -> ModuleResult,
-    private val deferred: Queue<() -> Unit>
 ) {
     fun qualifiedNameType(name: Identifier): QualifiedName {
         return QualifiedName.type(qualifiedPrefix, name)
@@ -156,7 +154,6 @@ internal class TypeContext(
             resolvedReferences = resolvedReferences,
             typeRegistry = typeRegistry,
             getModule = getModule,
-            deferred = deferred
         ).enterScope()
     }
 
@@ -174,19 +171,7 @@ internal class TypeContext(
             resolvedReferences = resolvedReferences,
             typeRegistry = typeRegistry,
             getModule = getModule,
-            deferred = deferred
         )
-    }
-
-    fun defer(deferred: () -> Unit) {
-        this.deferred.add(deferred)
-    }
-
-    fun undefer() {
-        while (this.deferred.isNotEmpty()) {
-            val deferred = this.deferred.poll()
-            deferred()
-        }
     }
 
     fun toTypes(): Types {
@@ -213,7 +198,6 @@ internal class TypeContext(
             resolvedReferences = resolvedReferences,
             typeRegistry = typeRegistry,
             getModule = getModule,
-            deferred = LinkedList(deferred),
         )
     }
 }
@@ -314,8 +298,6 @@ internal fun typeCheckModule(moduleName: ModuleName, module: ModuleNode, context
             steps.run(phase, context)
         }
     }
-
-    context.undefer()
 
     val fields = module.exports.map { export ->
         Field(

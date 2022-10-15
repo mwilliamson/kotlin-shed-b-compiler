@@ -18,7 +18,6 @@ class TypeCheckEffectDeclarationTests {
         val typeContext = typeContext()
 
         typeCheckTypesModuleStatement(node, typeContext)
-        typeContext.undefer()
 
         assertThat(typeContext.typeOf(node), isEffectType(
             cast(allOf(

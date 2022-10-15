@@ -20,7 +20,6 @@ internal fun captureTypes(
     )
 
     typeCheckExpression(expression, typeContext)
-    typeContext.undefer()
 
     return TypesMap(
         discriminators = mapOf(),

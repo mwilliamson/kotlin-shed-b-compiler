@@ -189,7 +189,6 @@ class TypeCheckShapeTests {
             extendsShape2Reference to metaType(shape2)
         ))
         typeCheckModuleStatementAllPhases(node, typeContext)
-        typeContext.undefer()
 
         val metaType = typeContext.typeOf(node)
         assertThat(metaType, isMetaType(isShapeType()))
@@ -217,7 +216,6 @@ class TypeCheckShapeTests {
         assertThat(
             {
                 typeCheckModuleStatementAllPhases(node, typeContext)
-                typeContext.undefer()
             },
             throws(
                 has(FieldDeclarationShapeIdConflictError::name, isIdentifier("a"))
@@ -246,7 +244,6 @@ class TypeCheckShapeTests {
             baseReference to metaType(base)
         ))
         typeCheckModuleStatementAllPhases(node, typeContext)
-        typeContext.undefer()
         val metaType = typeContext.typeOf(node)
         assertThat(metaType, isMetaType(isShapeType()))
         val type = metaTypeToType(metaType)!!
@@ -279,7 +276,6 @@ class TypeCheckShapeTests {
         assertThat(
             {
                 typeCheckModuleStatementAllPhases(node, typeContext)
-                typeContext.undefer()
             },
             throws(allOf(
                 has(FieldDeclarationOverrideTypeConflictError::name, isIdentifier("a")),
@@ -354,7 +350,7 @@ class TypeCheckShapeTests {
         )
         // TODO: use more specific exception
         assertThat(
-            { typeCheckModuleStatementAllPhases(node, typeContext); typeContext.undefer() },
+            { typeCheckModuleStatementAllPhases(node, typeContext) },
             throws(has(TypeCheckError::message, equalTo("field type cannot be contravariant")))
         )
     }
